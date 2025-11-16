@@ -37,7 +37,7 @@ class ErrorRecoveryAgent:
         """Initialize the Error Recovery Agent."""
         self.name = "ErrorRecoveryAgent"
         self.retry_tracker: Dict[str, int] = {}  # Track retry counts per error
-        print(f"✅ {self.name} initialized")
+        print(f" {self.name} initialized")
     
     async def _silent_callback(self, stream_data: Dict):
         """Silent callback for internal AI processing - doesn't send to users."""
@@ -62,7 +62,7 @@ class ErrorRecoveryAgent:
             ErrorRecoveryResult with fix strategy
         """
         try:
-            print(f"\n🔍 [{self.name}] Analyzing error: {error.error_type}")
+            print(f"\n [{self.name}] Analyzing error: {error.error_type}")
             print(f"   Severity: {error.severity.value}")
             print(f"   Retry count: {retry_count}/{self.MAX_RETRY_ATTEMPTS}")
             
@@ -87,14 +87,14 @@ class ErrorRecoveryAgent:
             
             # Log result
             if result.can_auto_fix:
-                print(f"✅ [{self.name}] Error can be auto-fixed")
+                print(f" [{self.name}] Error can be auto-fixed")
             else:
-                print(f"⚠️ [{self.name}] Manual intervention required")
+                print(f" [{self.name}] Manual intervention required")
             
             return result
         
         except Exception as e:
-            print(f"❌ [{self.name}] Error analysis failed: {str(e)}")
+            print(f" [{self.name}] Error analysis failed: {str(e)}")
             return self._create_fallback_result(str(e))
     
     
@@ -110,7 +110,7 @@ class ErrorRecoveryAgent:
         can_auto_fix = analysis.get("can_auto_fix", False)
         if retry_count >= self.MAX_RETRY_ATTEMPTS:
             can_auto_fix = False
-            print(f"⚠️ [{self.name}] Max retries reached, escalating to user")
+            print(f" [{self.name}] Max retries reached, escalating to user")
         
         return ErrorRecoveryResult(
             can_auto_fix=can_auto_fix,
@@ -156,11 +156,11 @@ class ErrorRecoveryAgent:
             Updated ErrorRecoveryResult with fix status
         """
         if not recovery_result.can_auto_fix:
-            print(f"⚠️ [{self.name}] Cannot auto-fix, skipping attempt")
+            print(f" [{self.name}] Cannot auto-fix, skipping attempt")
             return recovery_result
         
         if not recovery_result.fixed_code:
-            print(f"⚠️ [{self.name}] No fix code provided")
+            print(f" [{self.name}] No fix code provided")
             recovery_result.can_auto_fix = False
             return recovery_result
         
@@ -176,12 +176,12 @@ class ErrorRecoveryAgent:
             # 3. Check if the error is resolved
             
             # For now, we'll assume the fix needs to be validated by caller
-            print(f"✅ [{self.name}] Fix generated, needs validation")
+            print(f" [{self.name}] Fix generated, needs validation")
             
             return recovery_result
         
         except Exception as e:
-            print(f"❌ [{self.name}] Fix attempt failed: {str(e)}")
+            print(f" [{self.name}] Fix attempt failed: {str(e)}")
             recovery_result.success = False
             recovery_result.explanation = f"Fix failed: {str(e)}"
             return recovery_result
@@ -210,7 +210,7 @@ class ErrorRecoveryAgent:
         """
         if error_id in self.retry_tracker:
             del self.retry_tracker[error_id]
-            print(f"✅ [{self.name}] Reset retry count for {error_id}")
+            print(f" [{self.name}] Reset retry count for {error_id}")
     
     
     def should_escalate(self, error: ErrorDetails, retry_count: int) -> bool:
@@ -247,7 +247,7 @@ class ErrorRecoveryAgent:
         This is shown when we need user input to resolve the error.
         """
         message_parts = [
-            "⚠️ **Error Occurred**\n",
+            " **Error Occurred**\n",
             f"**Type:** {error.error_type.capitalize()}\n",
             f"**Message:** {error.message}\n"
         ]

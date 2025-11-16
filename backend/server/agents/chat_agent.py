@@ -136,7 +136,7 @@ class ChatAgent:
         Generate a suggestion to switch to Code Mode.
         """
         return (
-            "\n\n💡 **Tip:** If you'd like me to generate actual code for this, "
+            "\n\n **Tip:** If you'd like me to generate actual code for this, "
             "you can tell me and i'll switch to Code Mode and create the Flutter widgets for you!"
         )
     
@@ -179,7 +179,7 @@ For detailed analysis and fixes, the system will automatically use the Error Rec
         """
         Generate a welcome message for new conversations.
         """
-        return """👋 **Welcome to F3!**
+        return """ **Welcome to F3!**
 
 I'm here to help you with your Flutter development! I can:
 - Answer questions about Flutter concepts

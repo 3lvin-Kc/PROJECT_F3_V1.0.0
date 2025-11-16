@@ -4,28 +4,28 @@ F3 AI Backend - Consolidated API
 
 This is the cleaned-up F3 backend with 9 essential endpoints:
 
-🌐 WebSocket:
+  WebSocket:
   - /ws/{client_id}                    # Real-time AI progress updates
 
-🔧 System:
+  System:
   - /health                            # System health check
 
-💬 AI Chat:
+  AI Chat:
   - /api/chat                          # Main AI conversation (POST)
 
-📁 Projects:
+  Projects:
   - /api/projects                      # Create project from prompt (POST)
   - /api/projects/{id}                 # Get info (GET) / Delete (DELETE)
   - /api/projects/{id}/files           # List project files (GET)
 
-📄 Files:
+  Files:
   - /api/files/read                    # Read file content (POST)
   - /api/files/write                   # Write file content (POST)
 
-🎨 Preview:
+  Preview:
   - /api/preview/generate              # Generate widget preview (POST)
 
-💭 Conversations:
+  Conversations:
   - /api/conversations/{id}            # Clear conversation (DELETE)
 
 All endpoints have TODO comments for Supabase authentication integration.
@@ -68,7 +68,7 @@ app.add_middleware(
 
 
 # ============================================================================
-# WEBSOCKET ENDPOINTS
+# WEBSOCKET ENDPOINTS..................................
 # ============================================================================
 
 @app.websocket("/ws/{client_id}")
@@ -88,7 +88,7 @@ async def get_websocket_stats():
 
 
 # ============================================================================
-# HEALTH CHECK
+# HEALTH CHECK........................
 # ============================================================================
 
 @app.get("/health")
@@ -333,7 +333,7 @@ async def delete_project(project_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Removed: Duplicate file endpoints - use /api/files/* instead
+
 
 
 # Removed: Compile and validate endpoints - not needed for core functionality

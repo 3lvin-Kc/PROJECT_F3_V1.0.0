@@ -227,7 +227,7 @@ class F3WebSocketManager:
             }, conversation_id)
     
     # ============================================================================
-    # AI PROGRESS TRACKING METHODS
+    # AI PROGRESS TRACKING METHODS...................................................................
     # ============================================================================
     
     async def send_progress_update(self, conversation_id: str, status: str, message: str = "", files_created: Optional[List[str]] = None, error_message: Optional[str] = None, user_prompt: str = ""):
@@ -461,7 +461,7 @@ class F3WebSocketManager:
         )
     
     # ============================================================================
-    # FILE UPDATES
+    # FILE UPDATES....................................
     # ============================================================================
     
     async def send_file_update(self, conversation_id: str, file_path: str, content: str, operation: str = "update"):
@@ -485,7 +485,7 @@ class F3WebSocketManager:
         }, conversation_id)
     
     # ============================================================================
-    # UTILITY METHODS
+    # UTILITY METHODS....
     # ============================================================================
     
     def get_stats(self) -> Dict[str, Any]:

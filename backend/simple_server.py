@@ -92,10 +92,10 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    print("🚀 Starting F3 Backend Server...")
-    print("🔗 Server will be available at: http://localhost:8000")
-    print("📖 API docs will be available at: http://localhost:8000/docs")
-    print("🎯 Frontend should connect from: http://localhost:5173")
+    print("  Starting F3 Backend Server...")
+    print("  Server will be available at: http://localhost:8000")
+    print("  API docs will be available at: http://localhost:8000/docs")
+    print("  Frontend should connect from: http://localhost:5173")
     print("-" * 60)
     
     uvicorn.run(

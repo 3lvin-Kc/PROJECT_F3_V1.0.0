@@ -31,7 +31,7 @@ class PlanningAgent:
     def __init__(self):
         """Initialize the Planning Agent."""
         self.name = "PlanningAgent"
-        print(f"✅ {self.name} initialized")
+        print(f" {self.name} initialized")
     
     async def _silent_callback(self, stream_data: Dict):
         """Silent callback for internal AI processing - doesn't send to users."""
@@ -63,7 +63,7 @@ class PlanningAgent:
             )
         """
         try:
-            print(f"\n📋 [{self.name}] Creating plan for: '{user_request[:50]}...'")
+            print(f"\n [{self.name}] Creating plan for: '{user_request[:50]}...'")
             
             # Build the prompt
             prompt = build_planning_prompt(user_request, project_context)
@@ -90,13 +90,13 @@ class PlanningAgent:
             # Parse and validate the plan
             execution_plan = self._parse_plan(plan_data)
             
-            print(f"✅ [{self.name}] Created plan with {len(execution_plan.steps)} steps")
+            print(f" [{self.name}] Created plan with {len(execution_plan.steps)} steps")
             print(f"   Files to modify: {len(execution_plan.estimated_files)}")
             
             return execution_plan
         
         except Exception as e:
-            print(f"❌ [{self.name}] Error creating plan: {str(e)}")
+            print(f" [{self.name}] Error creating plan: {str(e)}")
             # Return a minimal fallback plan
             return self._create_fallback_plan(user_request, str(e))
     
@@ -131,7 +131,7 @@ class PlanningAgent:
             )
         
         except Exception as e:
-            print(f"⚠️ [{self.name}] Error parsing plan: {str(e)}")
+            print(f" [{self.name}] Error parsing plan: {str(e)}")
             raise
     
     
@@ -185,7 +185,7 @@ class PlanningAgent:
         is_valid = len(issues) == 0
         
         if not is_valid:
-            print(f"⚠️ [{self.name}] Plan validation failed:")
+            print(f" [{self.name}] Plan validation failed:")
             for issue in issues:
                 print(f"   - {issue}")
         
@@ -196,7 +196,7 @@ class PlanningAgent:
         """
         Optimize a plan by combining similar steps and removing redundancies.
         """
-        print(f"🔧 [{self.name}] Optimizing plan...")
+        print(f" [{self.name}] Optimizing plan...")
         
         # Remove duplicate file operations
         seen_files = set()
@@ -236,7 +236,7 @@ class PlanningAgent:
         
         This is useful when a plan needs adjustment after errors or user input.
         """
-        print(f"🔄 [{self.name}] Refining plan based on feedback...")
+        print(f" [{self.name}] Refining plan based on feedback...")
         
         # Create a prompt for plan refinement
         prompt = f"""Refine this execution plan based on feedback.
@@ -262,11 +262,11 @@ Create an updated plan that addresses the feedback while maintaining the origina
             )
             
             refined_plan = self._parse_plan(refined_data)
-            print(f"✅ [{self.name}] Plan refined")
+            print(f"[{self.name}] Plan refined")
             return refined_plan
         
         except Exception as e:
-            print(f"❌ [{self.name}] Plan refinement failed: {str(e)}")
+            print(f" [{self.name}] Plan refinement failed: {str(e)}")
             # Return original plan if refinement fails
             return original_plan
     

@@ -31,7 +31,7 @@ try:
 except ImportError:
     f3_websocket_manager = None
     WEBSOCKET_AVAILABLE = False
-    print("⚠️ WebSocket service not available - progress updates disabled")
+    print(" WebSocket service not available - progress updates disabled")
 
 # Import AIService separately to ensure it is always available
 from ..services.ai_service import AIService
@@ -43,7 +43,7 @@ try:
 except ImportError:
     project_service = None
     PROJECT_SERVICE_AVAILABLE = False
-    print("⚠️ Project service not available - file saving disabled")
+    print(" Project service not available - file saving disabled")
 
 
 class AgentCoordinator:
@@ -72,8 +72,8 @@ class AgentCoordinator:
         
         print(f" {self.name} initialized")
         print(f"   Managing agents: Intent, Planning, Coding, Error Recovery, Chat")
-        print(f"   Streaming mode: ✅ Enabled (streaming-only)")
-        print(f"   Project file saving: {'✅ Enabled' if self.project_service_enabled else '❌ Disabled'}")
+        print(f"   Streaming mode:  Enabled (streaming-only)")
+        print(f"   Project file saving: {'Enabled' if self.project_service_enabled else '❌ Disabled'}")
     
     async def _send_progress_update(self, conversation_id: str, status: str, message: str = "", files_created: Optional[List[str]] = None, error_message: Optional[str] = None, user_prompt: str = ""):
         # Pass user prompt to all phases for contextual AI generation
@@ -133,7 +133,7 @@ class AgentCoordinator:
             await self._send_progress_update(conversation_id, "analyzing", message, user_prompt=message)
             
             # STEP 1: Classify intent
-            print(f"\n📍 STEP 1: Intent Classification")
+            print(f"\n STEP 1: Intent Classification")
             classification = await intent_classifier_agent.classify(
                 message=message,
                 conversation_history=conv_state.message_history,
@@ -141,7 +141,7 @@ class AgentCoordinator:
             )
             
             # STEP 2: Determine if mode switch is needed
-            print(f"\n📍 STEP 2: Mode Management")
+            print(f"\n STEP 2: Mode Management")
             should_switch = intent_classifier_agent.should_switch_mode(
                 classification=classification,
                 current_mode=conv_state.current_mode
@@ -153,7 +153,7 @@ class AgentCoordinator:
                 print(f"   Mode switched: {old_mode.value} → {conv_state.current_mode.value}")
             
             # STEP 3: Route to appropriate workflow
-            print(f"\n📍 STEP 3: Workflow Routing")
+            print(f"\n STEP 3: Workflow Routing")
             print(f"   Intent: {classification.intent.value}")
             print(f"   Mode: {conv_state.current_mode.value}")
             
@@ -180,13 +180,13 @@ class AgentCoordinator:
             # Update state
             self.state.active_conversations[conversation_id] = conv_state
             
-            print(f"\n✅ [{self.name}] Message processed successfully")
+            print(f"\n [{self.name}] Message processed successfully")
             print(f"{'='*70}\n")
             
             return response
         
         except Exception as e:
-            print(f"\n❌ [{self.name}] Error processing message: {str(e)}")
+            print(f"\n [{self.name}] Error processing message: {str(e)}")
             return AssistantResponse(
                 content=f"I encountered an error: {str(e)}. Please try again.",
                 mode=ModeType.CHAT_MODE,
@@ -212,7 +212,7 @@ class AgentCoordinator:
         4. If error → Error Recovery Agent
         5. Return brief confirmation
         """
-        print(f"\n🔵 CODE MODE WORKFLOW")
+        print(f"\n CODE MODE WORKFLOW")
         
         try:
             # Check if this is an error clarification
@@ -241,16 +241,16 @@ class AgentCoordinator:
                 is_valid, issues = planning_agent.validate_plan(plan)
                 if not is_valid:
                     return AssistantResponse(
-                        content=f"⚠️ Planning issue: {', '.join(issues)}",
+                        content=f" Planning issue: {', '.join(issues)}",
                         mode=ModeType.CODE_MODE,
                         intent=IntentType.CODE,
                         conversation_id=conv_state.conversation_id
                     )
                     
             except Exception as e:
-                print(f"❌ Planning failed: {str(e)}")
+                print(f" Planning failed: {str(e)}")
                 return AssistantResponse(
-                    content=f"⚠️ Planning failed: {str(e)}. Please try rephrasing your request.",
+                    content=f" Planning failed: {str(e)}. Please try rephrasing your request.",
                     mode=ModeType.CODE_MODE,
                     intent=IntentType.CODE,
                     conversation_id=conv_state.conversation_id
@@ -270,9 +270,9 @@ class AgentCoordinator:
                     conversation_id=conv_state.conversation_id
                 )
             except Exception as e:
-                print(f"❌ Code generation failed: {str(e)}")
+                print(f" Code generation failed: {str(e)}")
                 return AssistantResponse(
-                    content=f"⚠️ Code generation failed: {str(e)}. Please try a simpler request.",
+                    content=f" Code generation failed: {str(e)}. Please try a simpler request.",
                     mode=ModeType.CODE_MODE,
                     intent=IntentType.CODE,
                     conversation_id=conv_state.conversation_id
@@ -329,9 +329,9 @@ class AgentCoordinator:
                 )
         
         except Exception as e:
-            print(f"❌ Code mode error: {str(e)}")
+            print(f" Code mode error: {str(e)}")
             return AssistantResponse(
-                content=f"⚠️ Code generation failed: {str(e)}",
+                content=f" Code generation failed: {str(e)}",
                 mode=ModeType.CODE_MODE,
                 intent=IntentType.CODE,
                 conversation_id=conv_state.conversation_id,
@@ -352,7 +352,7 @@ class AgentCoordinator:
         1. Chat Agent generates conversational response
         2. Return full explanation (no code!)
         """
-        print(f"\n🟢 CHAT MODE WORKFLOW")
+        print(f"\n CHAT MODE WORKFLOW")
         
         try:
             # Check if user wants to generate code (switch to code mode)
@@ -384,7 +384,7 @@ class AgentCoordinator:
             )
         
         except Exception as e:
-            print(f"❌ Chat mode error: {str(e)}")
+            print(f" Chat mode error: {str(e)}")
             return AssistantResponse(
                 content=chat_agent._generate_error_response(str(e)),
                 mode=ModeType.CHAT_MODE,
@@ -409,7 +409,7 @@ class AgentCoordinator:
         3. If can auto-fix → retry (max 3 times)
         4. If needs user input → switch to Chat Mode
         """
-        print(f"\n🔴 ERROR RECOVERY WORKFLOW")
+        print(f"\n ERROR RECOVERY WORKFLOW")
         
         # Create error details
         error = error_recovery_agent.create_error_details(
@@ -438,7 +438,7 @@ class AgentCoordinator:
             
             # For now, return a message about the fix attempt
             return AssistantResponse(
-                content=f"⚙️ Attempting to fix error (attempt {retry_count}/3)...\n{recovery_result.explanation}",
+                content=f" Attempting to fix error (attempt {retry_count}/3)...\n{recovery_result.explanation}",
                 mode=ModeType.CODE_MODE,
                 intent=IntentType.CODE,
                 conversation_id=conv_state.conversation_id,
@@ -482,7 +482,7 @@ class AgentCoordinator:
         
         User provides clarification, we go back to Planning Agent.
         """
-        print(f"\n🔄 ERROR CLARIFICATION WORKFLOW")
+        print(f"\n ERROR CLARIFICATION WORKFLOW")
         
         # Extract error context from conversation
         # In real app, you'd track which error is being addressed
@@ -505,7 +505,7 @@ class AgentCoordinator:
         
         if result.success:
             return AssistantResponse(
-                content=f"✅ Fixed!\n{result.message}",
+                content=f" Fixed!\n{result.message}",
                 mode=ModeType.CODE_MODE,
                 intent=IntentType.CODE,
                 conversation_id=conv_state.conversation_id,
@@ -525,10 +525,10 @@ class AgentCoordinator:
         Get existing conversation or create new one.
         """
         if conversation_id in self.state.active_conversations:
-            print(f"   📂 Retrieved existing conversation: {conversation_id}")
+            print(f"    Retrieved existing conversation: {conversation_id}")
             return self.state.active_conversations[conversation_id]
         
-        print(f"   ✨ Created new conversation: {conversation_id}")
+        print(f"    Created new conversation: {conversation_id}")
         return self.state.create_conversation(conversation_id)
     
     
@@ -558,7 +558,7 @@ class AgentCoordinator:
         Save generated files to project using project service.
         """
         try:
-            print(f"\n💾 [{self.name}] Saving {len(files)} files to project {project_id}")
+            print(f"\n [{self.name}] Saving {len(files)} files to project {project_id}")
             
             # Convert CodeChange objects to file format expected by project service
             file_list = []
@@ -578,16 +578,16 @@ class AgentCoordinator:
                     conversation_id=conversation_id
                 )
                 if result["success"]:
-                    print(f"✅ [{self.name}] Saved {result['total_saved']} files to project")
+                    print(f" [{self.name}] Saved {result['total_saved']} files to project")
                     if result["total_failed"] > 0:
-                        print(f"⚠️ [{self.name}] Failed to save {result['total_failed']} files")
+                        print(f" [{self.name}] Failed to save {result['total_failed']} files")
                 else:
-                    print(f"❌ [{self.name}] Failed to save files to project: {result.get('error', 'Unknown error')}")
+                    print(f" [{self.name}] Failed to save files to project: {result.get('error', 'Unknown error')}")
             else:
-                print(f"❌ [{self.name}] Project service is not available. Cannot save files.")
+                print(f" [{self.name}] Project service is not available. Cannot save files.")
                 
         except Exception as e:
-            print(f"❌ [{self.name}] Error saving files to project: {str(e)}")
+            print(f" [{self.name}] Error saving files to project: {str(e)}")
     
     def clear_conversation(self, conversation_id: str):
         """
@@ -595,7 +595,7 @@ class AgentCoordinator:
         """
         if conversation_id in self.state.active_conversations:
             del self.state.active_conversations[conversation_id]
-            print(f"🗑️ [{self.name}] Cleared conversation: {conversation_id}")
+            print(f" [{self.name}] Cleared conversation: {conversation_id}")
     
     
     def get_system_stats(self) -> Dict[str, Any]:

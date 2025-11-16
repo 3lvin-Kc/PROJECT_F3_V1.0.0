@@ -18,11 +18,11 @@ sys.path.insert(0, str(server_dir))
 if __name__ == "__main__":
     import uvicorn
     
-    print("🚀 Starting F3 Backend Server...")
-    print(f"📁 Backend directory: {backend_dir}")
-    print(f"📁 Server directory: {server_dir}")
-    print("🔗 Server will be available at: http://localhost:8000")
-    print("📖 API docs will be available at: http://localhost:8000/docs")
+    print("  Starting F3 Backend Server...")
+    print(f"  Backend directory: {backend_dir}")
+    print(f"  Server directory: {server_dir}")
+    print("  Server will be available at: http://localhost:8000")
+    print("  API docs will be available at: http://localhost:8000/docs")
     print("-" * 60)
     
     # Start the server

@@ -35,7 +35,7 @@ class CodingAgent:
     def __init__(self):
         """Initialize the Coding Agent."""
         self.name = "CodingAgent"
-        print(f"✅ {self.name} initialized")
+        print(f"  {self.name} initialized")
     
     async def _silent_callback(self, stream_data: Dict):
         """Silent callback for internal AI processing - doesn't send to users."""
@@ -60,7 +60,7 @@ class CodingAgent:
         Returns:
             CodeGenerationResult with all changes made
         """
-        print(f"\n⚙️ [{self.name}] Executing plan: {plan.plan_id}")
+        print(f"\n  [{self.name}] Executing plan: {plan.plan_id}")
         print(f"   Steps to execute: {len(plan.steps)}")
         
         all_changes = []
@@ -92,7 +92,7 @@ class CodingAgent:
                     )
             
             # All steps completed successfully
-            print(f"✅ [{self.name}] Plan executed successfully")
+            print(f"  [{self.name}] Plan executed successfully")
             return CodeGenerationResult(
                 success=True,
                 changes=all_changes,
@@ -101,7 +101,7 @@ class CodingAgent:
             )
         
         except Exception as e:
-            print(f"❌ [{self.name}] Plan execution failed: {str(e)}")
+            print(f" [{self.name}] Plan execution failed: {str(e)}")
             return CodeGenerationResult(
                 success=False,
                 changes=all_changes,
@@ -152,7 +152,7 @@ class CodingAgent:
             )
         
         except Exception as e:
-            print(f"❌ [{self.name}] Step execution failed: {str(e)}")
+            print(f" [{self.name}] Step execution failed: {str(e)}")
             return CodeGenerationResult(
                 success=False,
                 changes=[],
@@ -235,7 +235,7 @@ class CodingAgent:
         This follows the CODE MODE rule: brief confirmations only!
         """
         if not changes:
-            return "✓ No changes made"
+            return "  No changes made"
         
         # Count operations
         created = sum(1 for c in changes if c.operation == "create")
@@ -244,11 +244,11 @@ class CodingAgent:
         
         messages = []
         if created:
-            messages.append(f"✓ Created {created} file(s)")
+            messages.append(f" Created {created} file(s)")
         if updated:
-            messages.append(f"✓ Updated {updated} file(s)")
+            messages.append(f" Updated {updated} file(s)")
         if deleted:
-            messages.append(f"✓ Deleted {deleted} file(s)")
+            messages.append(f" Deleted {deleted} file(s)")
         
         # Also list specific files
         file_list = []
@@ -272,7 +272,7 @@ class CodingAgent:
         
         This is a convenience method for simple widget generation.
         """
-        print(f"\n🎨 [{self.name}] Generating widget: {widget_description}")
+        print(f"\n [{self.name}] Generating widget: {widget_description}")
         
         # Create a simple action step
         step = ActionStep(
@@ -295,7 +295,7 @@ class CodingAgent:
         """
         Modify an existing Flutter widget.
         """
-        print(f"\n✏️ [{self.name}] Modifying widget: {file_path}")
+        print(f"\n [{self.name}] Modifying widget: {file_path}")
         
         # Create modification step
         step = ActionStep(
@@ -340,7 +340,7 @@ class CodingAgent:
         is_valid = len(issues) == 0
         
         if not is_valid:
-            print(f"⚠️ [{self.name}] Code validation failed:")
+            print(f" [{self.name}] Code validation failed:")
             for issue in issues:
                 print(f"   - {issue}")
         

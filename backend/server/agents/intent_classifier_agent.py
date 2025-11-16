@@ -2,7 +2,7 @@
 Intent Classifier Agent
 =======================
 This agent analyzes user messages and determines what they want to do.
-Think of it as a "traffic controller" that routes messages to the right place.
+Think of it as a traffic controller that routes messages to the right place.
 
 SERVER SIDE FILE
 """
@@ -29,11 +29,11 @@ class IntentClassifierAgent:
     def __init__(self):
         """Initialize the Intent Classifier Agent."""
         self.name = "IntentClassifierAgent"
-        print(f"✅ {self.name} initialized")
+        print(f"  {self.name} initialized")
     
     async def _silent_callback(self, stream_data: Dict):
         """Silent callback for internal AI processing - doesn't send to users."""
-        # Intent classification happens internally and doesn't need user-visible streaming
+        # Intent classification happens internally and ain't  need uservisible streaming
         pass
     
     
@@ -61,7 +61,7 @@ class IntentClassifierAgent:
             # result.suggested_mode = ModeType.CODE_MODE
         """
         try:
-            print(f"\n🔍 [{self.name}] Classifying message: '{message[:50]}...'")
+            print(f"\n  [{self.name}] Classifying message: '{message[:50]}...'")
             
             # Build context from conversation history
             context = self._build_context(conversation_history, current_mode)
@@ -81,13 +81,13 @@ class IntentClassifierAgent:
             # Validate and parse the result
             intent_classification = self._parse_result(result)
             
-            print(f"✅ [{self.name}] Classified as: {intent_classification.intent.value} "
+            print(f"  [{self.name}] Classified as: {intent_classification.intent.value} "
                   f"(confidence: {intent_classification.confidence:.2f})")
             
             return intent_classification
         
         except Exception as e:
-            print(f"❌ [{self.name}] Error during classification: {str(e)}")
+            print(f"  [{self.name}] Error during classification: {str(e)}")
             # Return a safe default (chat mode with low confidence)
             return IntentClassification(
                 intent=IntentType.CHAT,
@@ -166,7 +166,7 @@ class IntentClassifierAgent:
             )
         
         except Exception as e:
-            print(f"⚠️ [{self.name}] Error parsing result: {str(e)}")
+            print(f" [{self.name}] Error parsing result: {str(e)}")
             # Return safe default
             return IntentClassification(
                 intent=IntentType.CHAT,
@@ -201,14 +201,14 @@ class IntentClassifierAgent:
         
         # Don't switch on low confidence
         if classification.confidence < CONFIDENCE_THRESHOLD:
-            print(f"⚠️ [{self.name}] Low confidence ({classification.confidence:.2f}), not switching mode")
+            print(f" [{self.name}] Low confidence ({classification.confidence:.2f}), not switching mode")
             return False
         
         # Determine if switch is needed
         should_switch = classification.suggested_mode != current_mode
         
         if should_switch:
-            print(f"🔄 [{self.name}] Recommending mode switch: "
+            print(f"[{self.name}] Recommending mode switch: "
                   f"{current_mode.value} → {classification.suggested_mode.value}")
         
         return should_switch

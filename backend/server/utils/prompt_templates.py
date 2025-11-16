@@ -8,7 +8,7 @@ SERVER SIDE FILE
 """
 
 # ============================================================================
-# INTENT CLASSIFIER PROMPTS
+# INTENT CLASSIFIER PROMPTS...................................................
 # ============================================================================
 
 INTENT_CLASSIFIER_SYSTEM = """You are an expert intent classifier for the F3 platform - a Flutter widget generation system.
@@ -73,7 +73,7 @@ Remember:
 
 
 # ============================================================================
-# PLANNING AGENT PROMPTS
+# PLANNING AGENT PROMPTS  ....................................................
 # ============================================================================
 
 PLANNING_AGENT_SYSTEM = """You are the Planning Agent for F3 - a Flutter widget generation platform creating WOW-MOMENT widgets for professional developers.
@@ -215,7 +215,7 @@ Generate a comprehensive plan following this JSON structure:
 
 
 # ============================================================================
-# CODING AGENT PROMPTS
+# CODING AGENT PROMPTS........................................................
 # ============================================================================
 
 CODING_AGENT_SYSTEM = """You are the Coding Agent for F3 - an expert Flutter developer creating WOW-MOMENT widgets for professional developers.
@@ -365,7 +365,7 @@ Return ONLY the complete, compilable Dart code with all imports."""
 
 
 # ============================================================================
-# ERROR RECOVERY AGENT PROMPTS
+# ERROR RECOVERY AGENT PROMPTS................................................
 # ============================================================================
 
 ERROR_RECOVERY_SYSTEM = """You are the Error Recovery Agent for F3.
@@ -429,7 +429,7 @@ Provide analysis as JSON:
 
 
 # ============================================================================
-# CHAT AGENT PROMPTS
+# CHAT AGENT PROMPTS..........................................................
 # ============================================================================
 
 CHAT_AGENT_SYSTEM = """You are the Chat Agent for F3 - a helpful Flutter development consultant.
@@ -486,7 +486,7 @@ Remember: NO CODE in your response!"""
 
 
 # ============================================================================
-# HELPER FUNCTIONS
+# HELPER FUNCTIONS............................................................
 # ============================================================================
 
 def format_context(context: dict) -> str:

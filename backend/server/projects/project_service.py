@@ -35,7 +35,7 @@ class ProjectService:
     
     def __init__(self):
         self.name = "ProjectService"
-        print(f"✅ {self.name} initialized")
+        print(f" {self.name} initialized")
     
     async def create_project_from_prompt(
         self,
@@ -57,7 +57,7 @@ class ProjectService:
             Dict with project details and status
         """
         try:
-            print(f"\n🚀 [{self.name}] Creating project from prompt")
+            print(f"\n [{self.name}] Creating project from prompt")
             print(f"   Prompt: {user_prompt[:100]}...")
             
             # 1. Generate unique project ID
@@ -99,7 +99,7 @@ class ProjectService:
                 conversation_id=conversation_id
             )
             
-            print(f"✅ [{self.name}] Project created successfully")
+            print(f" [{self.name}] Project created successfully")
             print(f"   Project ID: {project_id}")
             print(f"   DB ID: {db_project_id}")
             print(f"   Name: {project_name}")
@@ -115,7 +115,7 @@ class ProjectService:
             }
             
         except Exception as e:
-            print(f"❌ [{self.name}] Error creating project: {str(e)}")
+            print(f" [{self.name}] Error creating project: {str(e)}")
             return {
                 "success": False,
                 "error": f"Project creation failed: {str(e)}"
@@ -219,7 +219,7 @@ class ProjectService:
                         "error": fs_result["error"]
                     })
             
-            print(f"✅ [{self.name}] Saved {len(saved_files)} files, {len(failed_files)} failed")
+            print(f" [{self.name}] Saved {len(saved_files)} files, {len(failed_files)} failed")
             
             return {
                 "success": len(saved_files) > 0,
@@ -230,7 +230,7 @@ class ProjectService:
             }
             
         except Exception as e:
-            print(f"❌ [{self.name}] Error saving files: {str(e)}")
+            print(f" [{self.name}] Error saving files: {str(e)}")
             return {
                 "success": False,
                 "error": f"Failed to save files: {str(e)}"
@@ -247,7 +247,7 @@ class ProjectService:
             Dict with deletion results
         """
         try:
-            print(f"\n🗑️ [{self.name}] Deleting project {project_id}")
+            print(f"\n [{self.name}] Deleting project {project_id}")
             
             # Get database project info first
             db_project = await self._get_database_project_by_fs_id(project_id)
@@ -278,7 +278,7 @@ class ProjectService:
             }
     
     # ============================================================================
-    # PRIVATE HELPER METHODS
+    # PRIVATE HELPER METHODS.......................................
     # ============================================================================
     
     def _generate_project_id(self) -> str:

@@ -97,7 +97,7 @@ class AIService:
         self.streaming_delay = 0.05  # 50ms delay between token chunks for premium feel
         
         self._initialized = True
-        print("✅ AI Service initialized with Gemini 2.5 Flash + Streaming-Only Mode")
+        print(" AI Service initialized with Gemini 2.5 Flash + Streaming-Only Mode")
     
     
     async def _check_rate_limit(self):
@@ -111,7 +111,7 @@ class AIService:
         # Check if we've exceeded requests per minute
         if len(self.request_timestamps) >= self.requests_per_minute:
             wait_time = 60 - (current_time - self.request_timestamps[0])
-            print(f"⏱️ Rate limit reached. Waiting {wait_time:.1f} seconds...")
+            print(f" Rate limit reached. Waiting {wait_time:.1f} seconds...")
             await asyncio.sleep(wait_time)
             return await self._check_rate_limit()  # Recheck after waiting
         
@@ -119,7 +119,7 @@ class AIService:
         time_since_last = current_time - self.last_request_time
         if time_since_last < self.min_request_interval:
             wait_time = self.min_request_interval - time_since_last
-            print(f"⏱️ Enforcing minimum interval. Waiting {wait_time:.1f} seconds...")
+            print(f" Enforcing minimum interval. Waiting {wait_time:.1f} seconds...")
             await asyncio.sleep(wait_time)
         
         # Record this request
@@ -135,11 +135,11 @@ class AIService:
         if "429" in error_str or "quota" in error_str or "rate limit" in error_str:
             if retry_count < len(self.retry_delays):
                 delay = self.retry_delays[retry_count]
-                print(f"🔄 Rate limit hit. Retrying in {delay} seconds... (attempt {retry_count + 1})")
+                print(f" Rate limit hit. Retrying in {delay} seconds... (attempt {retry_count + 1})")
                 await asyncio.sleep(delay)
                 return True  # Indicate retry should happen
             else:
-                print("❌ Max retries exceeded for rate limit. Giving up.")
+                print(" Max retries exceeded for rate limit. Giving up.")
                 raise Exception("Rate limit exceeded. Please try again later.")
         
         # For other errors, don't retry
@@ -283,7 +283,7 @@ class AIService:
                 return full_response
             
             except Exception as e:
-                print(f"❌ Error in streaming generation: {str(e)}")
+                print(f" Error in streaming generation: {str(e)}")
                 
                 # Send error notification
                 if websocket_callback:
