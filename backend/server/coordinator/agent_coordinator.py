@@ -360,14 +360,28 @@ class AgentCoordinator:
                 conv_state.current_mode = ModeType.CODE_MODE
                 return await self._handle_code_mode(message, conv_state, intent)
             
-            # Generate streaming chat response
+            # Import the required modules for chat mode
+            from ..utils.prompt_templates import CHAT_AGENT_SYSTEM, build_chat_prompt
+            
+            # Build the proper chat prompt with context
+            prompt = build_chat_prompt(
+                message=message,
+                context=conv_state.context,
+                history=[{"role": msg.role.value, "content": msg.content} for msg in conv_state.message_history[-5:]]
+            )
+            
+            # Generate streaming chat response with proper system instruction
             response_text = await self.ai_service.generate_response(
-                prompt=message,
-                system_instruction="You are a helpful Flutter development assistant. Provide clear, conversational responses about Flutter development, UI design, and mobile app creation. Be friendly and encouraging.",
+                prompt=prompt,
+                system_instruction=CHAT_AGENT_SYSTEM,
                 context=[{"role": msg.role.value, "content": msg.content} for msg in conv_state.message_history[-5:]],  # Last 5 messages for context
                 websocket_callback=f3_websocket_manager.streaming_callback if f3_websocket_manager else None,
                 conversation_id=conv_state.conversation_id
             )
+            
+            # Safety check: Remove any code that might have leaked through
+            if chat_agent._contains_code(response_text):
+                response_text = chat_agent._sanitize_response(response_text)
             
             # Check if we should suggest code mode
             if chat_agent.should_suggest_code_mode(message):

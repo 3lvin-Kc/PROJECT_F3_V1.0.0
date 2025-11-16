@@ -62,7 +62,11 @@ class ChatAgent:
         """
         # Check for common code indicators
         code_indicators = [
-            "```",           # Markdown code blocks
+            "```dart",       # Dart code blocks
+            "```java",       # Java code blocks
+            "```javascript", # JavaScript code blocks
+            "```python",     # Python code blocks
+            "```",           # Generic code blocks
             "class ",        # Dart class definitions
             "Widget build(", # Flutter widget build method
             "import 'package:", # Dart imports
@@ -72,6 +76,32 @@ class ChatAgent:
         
         for indicator in code_indicators:
             if indicator in text:
+                return True
+        
+        # Additional check for lines that look like code
+        lines = text.split('\n')
+        code_patterns = [
+            r'^\s*[A-Za-z]+\s+[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)\s*\{',  # Function definitions
+            r'^\s*[A-Za-z_][A-Za-z0-9_]*\s*:\s*[A-Za-z_][A-Za-z0-9_]*',  # Variable declarations
+            r'^\s*return\s+',  # Return statements
+            r'^\s*if\s*\(',    # If statements
+            r'^\s*for\s*\(',   # For loops
+            r'^\s*while\s*\(', # While loops
+        ]
+        
+        import re
+        consecutive_code_lines = 0
+        for line in lines:
+            # Check if line matches code patterns
+            for pattern in code_patterns:
+                if re.match(pattern, line):
+                    consecutive_code_lines += 1
+                    break
+            else:
+                consecutive_code_lines = 0
+            
+            # If we find 3+ consecutive lines that look like code, flag it
+            if consecutive_code_lines >= 3:
                 return True
         
         return False
@@ -84,11 +114,27 @@ class ChatAgent:
         # Remove markdown code blocks
         import re
         
-        # Remove ```language ... ``` blocks
-        text = re.sub(r'```[\w]*\n.*?```', '[Code removed - please use Code Mode]', text, flags=re.DOTALL)
+        # Remove ```language ... ``` blocks (more comprehensive)
+        text = re.sub(r'```[a-zA-Z]*\n.*?```', '[Code removed - please use Code Mode]', text, flags=re.DOTALL)
+        
+        # Remove generic ``` ... ``` blocks
+        text = re.sub(r'```\n.*?```', '[Code removed - please use Code Mode]', text, flags=re.DOTALL)
         
         # Remove inline code
         text = re.sub(r'`[^`]+`', '[code snippet]', text)
+        
+        # Additional sanitization for code-like content
+        # Look for common Flutter/Dart patterns and replace them
+        flutter_patterns = [
+            (r'class\s+[A-Za-z_][A-Za-z0-9_]*\s*', '[Class definition removed]'),
+            (r'Widget\s+build\(\s*BuildContext\s+context\s*\)', '[Widget build method removed]'),
+            (r'import\s+\'package:.*?\'', '[Import statement removed]'),
+            (r'void\s+main\(\)', '[Main function removed]'),
+            (r'setState\(\s*\(\s*\)\s*\{.*?\}\s*\)', '[setState call removed]'),
+        ]
+        
+        for pattern, replacement in flutter_patterns:
+            text = re.sub(pattern, replacement, text, flags=re.DOTALL)
         
         return text
     
