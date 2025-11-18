@@ -345,14 +345,19 @@ class F3WebSocketManager:
             from ..services.ai_service import ai_service
             
             # Generate contextual coding message based on current files and project type
-            system_prompt = """You are an AI assistant currently writing Flutter code. 
-            Generate a natural message explaining what you're currently coding and implementing.
+            system_prompt = """You are an enthusiastic Flutter developer who is excited to build amazing widgets and components.
+            Generate a natural, conversational message explaining what you're currently coding and implementing.
             Be specific about the Flutter widgets, state management, or features you're working on.
             If files are being created, mention what's in those specific files.
-            Keep it under 150 words. Do not use emojis. Sound like a developer actively coding."""
+            Keep it under 150 words. Sound excited and helpful. Do not use emojis.
+            Examples:
+            - "Oh, I love this idea! Let me build this amazing button component for you. I'm starting with the core widget structure..."
+            - "This is going to be great! I'm working on the main layout file that will tie everything together. This will make your UI really responsive..."
+            - "I'm creating the state management logic that will make this widget really powerful. You'll be able to easily customize all the behaviors..."
+            """
             
             files_context = f" Currently creating files: {', '.join(files_created)}" if files_created else ""
-            user_message = f"I'm coding this Flutter project: '{user_prompt}'.{files_context} Explain what I'm specifically implementing right now."
+            user_message = f"I'm coding this Flutter project: '{user_prompt}'.{files_context} Explain what I'm specifically implementing right now with enthusiasm."
             
             message = await ai_service.generate_response(
                 prompt=user_message,
@@ -366,9 +371,9 @@ class F3WebSocketManager:
             print(f"AI generation failed for coding phase: {e}")
             if files_created and len(files_created) > 0:
                 current_file = files_created[-1]
-                message = f"I'm now writing the Flutter code for your project. Currently working on {current_file} and implementing the core functionality."
+                message = f"Oh, I love this idea! Let me build this for you. I'm currently working on {current_file} and implementing the core functionality."
             else:
-                message = "I'm now writing the Flutter code for your project. I'm implementing the user interface and core functionality."
+                message = "This is going to be great! I'm now writing the Flutter code for your project and implementing the user interface and core functionality."
         
         await self.send_ai_progress(
             conversation_id,
@@ -411,14 +416,29 @@ class F3WebSocketManager:
             from ..services.ai_service import ai_service
             
             # Generate contextual completion message based on what was actually built
-            system_prompt = """You are an AI assistant who just finished creating a Flutter project. 
+            system_prompt = """You are an enthusiastic Flutter developer who just finished creating a project.
             Generate an enthusiastic but professional completion message explaining what you've accomplished.
             Be specific about the features and components you've created for this particular project.
-            Mention what the user can now do with their project. Keep it under 150 words.
-            Do not use emojis. Sound proud of the work completed."""
+            Mention what the user can now do with their project.
+            Also provide 2-3 suggestions for how they can improve or extend this further.
+            Keep it under 200 words.
+            Do not use emojis. Sound proud of the work completed.
+            Example format:
+            "Perfect! I've successfully created your Flutter [component/widget/app] with [X] files. Everything is ready for you to preview and customize further.
+            
+            Here's what I built:
+            - [Feature 1]
+            - [Feature 2]
+            - [Feature 3]
+            
+            To make this even better, you could:
+            1. [Suggestion 1]
+            2. [Suggestion 2]
+            3. [Suggestion 3]"
+            """
             
             files_context = f" Created {len(files_created)} files: {', '.join(files_created)}" if files_created else ""
-            user_message = f"I just completed this Flutter project: '{user_prompt}'.{files_context} Generate a completion message explaining what I've accomplished."
+            user_message = f"I just completed this Flutter project: '{user_prompt}'.{files_context} Generate a completion message explaining what I've accomplished with enthusiasm and suggestions."
             
             message = await ai_service.generate_response(
                 prompt=user_message,
@@ -431,7 +451,7 @@ class F3WebSocketManager:
         except Exception as e:
             print(f"AI generation failed for completion phase: {e}")
             file_count = len(files_created) if files_created else 0
-            message = f"Perfect! I've successfully created your Flutter project with {file_count} files. Everything is ready for you to preview and customize further."
+            message = f"Perfect! I've successfully created your Flutter project with {file_count} files. Everything is ready for you to preview and customize further.\n\nTo make this even better, try asking me to add animations, improve the styling, or add more functionality!"
         
         await self.send_ai_progress(
             conversation_id,

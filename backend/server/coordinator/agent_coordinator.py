@@ -206,8 +206,8 @@ class AgentCoordinator:
         Handle Code Mode workflow.
         
         Workflow:
-        1. Planning Agent creates execution plan
-        2. Coding Agent executes the plan
+        1. Planning Agent creates execution plan (internal)
+        2. Coding Agent executes the plan with real-time updates
         3. Compile & validate
         4. If error → Error Recovery Agent
         5. Return brief confirmation
@@ -224,17 +224,14 @@ class AgentCoordinator:
                 conv_state.current_mode = ModeType.CHAT_MODE
                 return await self._handle_chat_mode(message, conv_state, intent)
             
-            # Send planning progress update
-            await self._send_progress_update(conv_state.conversation_id, "planning", user_prompt=message)
-            
-            # STEP 1: Create execution plan
-            print(f"\n   Step 1: Planning")
+            # STEP 1: Create execution plan (keep internal, no UI updates)
+            print(f"\n   Step 1: Planning (Internal)")
             try:
                 plan = await planning_agent.create_plan(
                     user_request=message,
                     project_context=conv_state.context,
-                    websocket_callback=f3_websocket_manager.streaming_callback if f3_websocket_manager else None,
-                    conversation_id=conv_state.conversation_id
+                    websocket_callback=None,  # Keep planning internal
+                    conversation_id=None
                 )
                 
                 # Validate plan
@@ -256,11 +253,11 @@ class AgentCoordinator:
                     conversation_id=conv_state.conversation_id
                 )
             
-            # Send coding progress update
+            # Send coding progress update to start UI feedback
             files_created = []
             await self._send_progress_update(conv_state.conversation_id, "coding", files_created=files_created, user_prompt=message)
             
-            # STEP 2: Execute plan
+            # STEP 2: Execute plan with real-time updates
             print(f"\n   Step 2: Code Generation")
             try:
                 result = await coding_agent.execute_plan(

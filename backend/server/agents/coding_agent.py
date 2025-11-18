@@ -19,6 +19,7 @@ from ..utils.prompt_templates import (
     CODING_AGENT_SYSTEM,
     build_coding_prompt
 )
+from .planning_agent import planning_agent  # Import planning agent for optimization
 
 
 class CodingAgent:
@@ -63,13 +64,17 @@ class CodingAgent:
         print(f"\n  [{self.name}] Executing plan: {plan.plan_id}")
         print(f"   Steps to execute: {len(plan.steps)}")
         
+        # Optimize the plan to limit to essential files for iterative development
+        optimized_plan = planning_agent.optimize_plan(plan)
+        print(f"   Optimized steps: {len(optimized_plan.steps)}")
+        
         all_changes = []
         warnings = []
         
         try:
             # Execute each step in sequence
-            for i, step in enumerate(plan.steps, 1):
-                print(f"   Executing step {i}/{len(plan.steps)}: {step.description}")
+            for i, step in enumerate(optimized_plan.steps, 1):
+                print(f"   Executing step {i}/{len(optimized_plan.steps)}: {step.description}")
                 
                 result = await self.execute_step(
                     step, 
@@ -128,6 +133,50 @@ class CodingAgent:
             CodeGenerationResult for this step
         """
         try:
+            # Send natural language update about what we're working on
+            if websocket_callback and conversation_id:
+                # Generate a natural, enthusiastic message about what we're doing
+                from ..services.ai_service import ai_service
+                
+                try:
+                    system_prompt = """You are an enthusiastic Flutter developer who is excited to build amazing widgets and components. 
+                    Generate a natural, conversational message explaining what you're currently working on.
+                    Be specific about the file you're creating or modifying and why it's important.
+                    Keep it under 100 words. Sound excited and helpful. Do not use emojis.
+                    Examples:
+                    - "Oh, I love this idea! Let me build this amazing button component for you..."
+                    - "This is going to be great! I'm working on the main layout file that will tie everything together..."
+                    - "I'm creating the state management logic that will make this widget really powerful..."
+                    """
+                    
+                    user_message = f"I'm now implementing this step: '{step.description}'. The target file is '{step.target_file}'. Generate an enthusiastic message about what I'm building."
+                    
+                    update_message = await ai_service.generate_response(
+                        prompt=user_message,
+                        system_instruction=system_prompt,
+                        temperature=0.7,
+                        websocket_callback=self._silent_callback,
+                        conversation_id="coding_narrative"
+                    )
+                    
+                    # Send this as a progress update
+                    from ..services.websocket_service import AIProgressStatus
+                    from ..services.websocket_service import f3_websocket_manager
+                    if f3_websocket_manager:
+                        await f3_websocket_manager.send_ai_progress(
+                            conversation_id,
+                            AIProgressStatus.CODING,
+                            update_message,
+                            {
+                                "phase": "Generating Code",
+                                "current_file": step.target_file or "unknown",
+                                "step_description": step.description
+                            }
+                        )
+                except Exception as e:
+                    print(f"Failed to generate narrative update: {e}")
+                    # Continue with execution even if narrative fails
+            
             # Generate code for this step
             code = await self._generate_code_for_step(
                 step, 
@@ -180,6 +229,25 @@ class CodingAgent:
         # Generate code using AI with streaming
         callback = websocket_callback if websocket_callback else self._silent_callback
         conv_id = conversation_id if conversation_id else "coding_internal"
+        
+        # Add narrative updates during code generation if we have a websocket callback
+        if websocket_callback and conversation_id:
+            # Send an update that we're generating code for this file
+            try:
+                from ..services.websocket_service import f3_websocket_manager, AIProgressStatus
+                if f3_websocket_manager:
+                    await f3_websocket_manager.send_ai_progress(
+                        conversation_id,
+                        AIProgressStatus.CODING,  # Status
+                        f"Working on {step.target_file or 'this component'}...",  # Message
+                        {
+                            "phase": "Generating Code",
+                            "current_file": step.target_file or "unknown",
+                            "step_description": step.description
+                        }
+                    )
+            except Exception as e:
+                print(f"Failed to send coding progress update: {e}")
         
         code = await ai_service.generate_response(
             prompt=prompt,

@@ -68,24 +68,14 @@ class PlanningAgent:
             # Build the prompt
             prompt = build_planning_prompt(user_request, project_context)
             
-            # Get plan from AI using streaming
-            if websocket_callback and conversation_id:
-                plan_data = await ai_service.generate_structured_response(
-                    prompt=prompt,
-                    system_instruction=PLANNING_AGENT_SYSTEM,
-                    websocket_callback=websocket_callback,
-                    conversation_id=conversation_id,
-                    response_format="json"
-                )
-            else:
-                # Fallback for internal use without streaming
-                plan_data = await ai_service.generate_structured_response(
-                    prompt=prompt,
-                    system_instruction=PLANNING_AGENT_SYSTEM,
-                    websocket_callback=self._silent_callback,
-                    conversation_id="planning_internal",
-                    response_format="json"
-                )
+            # Get plan from AI using streaming, but always use silent callback to keep planning internal
+            plan_data = await ai_service.generate_structured_response(
+                prompt=prompt,
+                system_instruction=PLANNING_AGENT_SYSTEM,
+                websocket_callback=self._silent_callback,  # Always keep planning internal
+                conversation_id="planning_internal",
+                response_format="json"
+            )
             
             # Parse and validate the plan
             execution_plan = self._parse_plan(plan_data)
@@ -195,6 +185,7 @@ class PlanningAgent:
     def optimize_plan(self, plan: ExecutionPlan) -> ExecutionPlan:
         """
         Optimize a plan by combining similar steps and removing redundancies.
+        Also limit to 4-5 essential files for iterative development.
         """
         print(f" [{self.name}] Optimizing plan...")
         
@@ -210,6 +201,13 @@ class PlanningAgent:
                 seen_files.add(step.target_file)
             
             optimized_steps.append(step)
+        
+        # Limit to 4-5 essential files for initial generation
+        # This supports iterative development - users can enhance later
+        if len(optimized_steps) > 5:
+            print(f" [{self.name}] Limiting to 5 essential steps for initial generation")
+            # Keep the most important steps (typically the first ones)
+            optimized_steps = optimized_steps[:5]
         
         # Update step numbers
         for i, step in enumerate(optimized_steps, 1):

@@ -76,17 +76,13 @@ Remember:
 # PLANNING AGENT PROMPTS  ....................................................
 # ============================================================================
 
-PLANNING_AGENT_SYSTEM = """You are the Planning Agent for F3 - a Flutter widget generation platform creating WOW-MOMENT widgets for professional developers.
+PLANNING_AGENT_SYSTEM = """You are the Planning Agent for F3 - a Flutter widget generation platform creating professional widgets for developers.
 
-Your role is to create detailed, step-by-step execution plans for generating exceptional Flutter widgets.
+Your role is to create concise, step-by-step execution plans for generating Flutter widgets quickly and efficiently.
 
-**CRITICAL: F3 serves DEVELOPERS, not beginners. Every plan must result in:**
-- Visually stunning, production-ready widgets
-- Technically impressive implementations
-- Performance-optimized code
-- Modern Flutter best practices
+**CRITICAL: Create SIMPLE, FOCUSED plans that can be executed in 4 seconds or less.**
 
-**Required File Structure to Follow:**
+**Required File Structure:**
 project_root/
 ├── lib/
 │   ├── main.dart                    # Entry point
@@ -96,122 +92,60 @@ project_root/
 │   ├── preview/                     # Screen previews and demos
 │   │   └── [widget_name]_preview.dart
 │   └── utils/                       # Helper functions, themes, constants
-│       ├── app_colors.dart
-│       ├── app_themes.dart
-│       └── constants.dart
 ├── pubspec.yaml
 └── README.md
 
 **Your Responsibilities:**
-1. Break down user requests into actionable steps that create amazing widgets
-2. Plan for widgets in lib/widgets/ directory with proper naming
-3. Create preview files in lib/preview/ directory
-4. Identify advanced Flutter features to implement (animations, custom painters, etc.)
-5. Plan for responsive design and accessibility
-6. Consider performance optimization and best practices
+1. Break down user requests into minimal actionable steps (5 steps max)
+2. Focus on essential features only
+3. Plan for quick implementation
+4. Include only necessary files
 
 **Plan Structure:**
-- Each step should be clear and atomic (one specific action)
-- Include exact file paths following the required structure
-- Specify action types: create_file, modify_file, add_import, update_widget, create_preview
-- Plan for WOW-MOMENT features (animations, gestures, visual effects)
-- Include advanced Flutter implementations
+- Maximum 5 steps
+- Clear and atomic actions
+- Exact file paths
+- Action types: create_file, modify_file, add_import
+- Focus on core functionality
 
-**WOW-MOMENT Planning Considerations:**
-- Advanced animations and micro-interactions
-- Custom painting and visual effects
-- Gesture handling and user interactions
-- Responsive design with breakpoints
-- Modern Material Design 3 implementation
-- Performance optimization techniques
-- Accessibility features
-- State management patterns"""
+**Simplified Planning:**
+- Skip WOW-MOMENT features for faster planning
+- Focus on basic widget functionality
+- Plan only essential files
+- Keep descriptions concise"""
 
 
-PLANNING_PROMPT = """Create a detailed execution plan to generate a WOW-MOMENT Flutter widget for professional developers.
+PLANNING_PROMPT = """Create a FAST execution plan for a Flutter widget. Keep it SIMPLE and under 5 steps.
 
 **User Request:** "{request}"
 
 **Current Project Context:**
 {context}
 
-Generate a comprehensive plan following this JSON structure:
+Generate a concise plan following this JSON structure:
 {{
     "plan_id": "unique-id-based-on-request",
     "steps": [
         {{
             "step_number": 1,
-            "action_type": "create_file|modify_file|add_import|update_widget|create_preview|create_readme",
-            "description": "clear description of what this step does",
-            "target_file": "lib/widgets/[widget_name].dart",
-            "dependencies": ["list of dart imports needed"],
-            "wow_features": ["list of impressive features to implement"]
+            "action_type": "create_file|modify_file|add_import",
+            "description": "brief description",
+            "target_file": "lib/widgets/[widget_name].dart"
         }}
     ],
     "estimated_files": [
-        "lib/widgets/[widget_name].dart",
-        "lib/preview/[widget_name]_preview.dart",
-        "README.md"
+        "lib/widgets/[widget_name].dart"
     ],
-    "dependencies": ["flutter packages needed for advanced features"],
-    "wow_moment_features": [
-        "list of impressive features that will amaze developers"
-    ],
-    "technical_highlights": [
-        "advanced Flutter techniques to be used"
-    ],
-    "notes": "important considerations for creating amazing widgets"
+    "dependencies": [],
+    "notes": "important considerations"
 }}
 
 **CRITICAL REQUIREMENTS:**
-
-1. **File Structure Compliance:**
-   - Main widget: lib/widgets/[widget_name].dart
-   - Preview screen: lib/preview/[widget_name]_preview.dart
-   - README.md file: MANDATORY for every widget generation
-   - Use snake_case for file names
-   - Organize by category if creating multiple related widgets
-
-2. **WOW-MOMENT Planning (Include at least 3):
-   - Stunning visual effects (gradients, shadows, blur)
-   - Smooth animations and micro-interactions
-   - Advanced custom painting or shaders
-   - Gesture-based interactions
-   - Dynamic theming and responsive design
-   - 3D transformations and perspective effects
-   - Particle systems or animated backgrounds
-   - Advanced state management patterns**
-
-3. **Technical Excellence:**
-   - Plan for const constructors and performance optimization
-   - Include proper disposal patterns for controllers
-   - Plan accessibility features (semantics, screen readers)
-   - Consider responsive design for different screen sizes
-   - Use latest Flutter APIs and Material Design 3
-
-4. **Professional Quality:**
-   - Plan comprehensive documentation
-   - Include error handling and edge cases
-   - Plan for customization parameters
-   - Consider reusability and extensibility
-
-**MANDATORY: README.md File Planning:**
-- MUST include a step to create a comprehensive README.md file
-- Plan for clear, easy-to-understand integration instructions
-- Focus on explaining concepts and integration steps in simple language
-- Plan for existing codebase integration guidance
-- Include widget features, customization options, and usage scenarios**
-
-**README.md Planning Requirements:**
-1. Widget overview and impressive features
-2. Step-by-step integration into existing Flutter projects
-3. Customization parameters and options
-4. Performance tips and best practices
-5. Accessibility considerations
-6. Common use cases (described conceptually)
-7. Troubleshooting and FAQ section
-
-**Remember:** This widget will be used by professional developers. Plan for something that will genuinely impress them and create a "wow" moment when they see it in action."""
+1. MAXIMUM 5 steps only
+2. Focus on core functionality
+3. Skip advanced features for speed
+4. Plan only essential files
+5. Keep descriptions brief and clear"""
 
 
 # ============================================================================

@@ -46,6 +46,25 @@ export const AIAssistantPanel = ({ showAIAssistant }: AIAssistantPanelProps) => 
           const data = JSON.parse(event.data);
           if (data.type === 'ai_progress') {
             setAiProgress(data);
+          } else if (data.type === 'ai_stream_token') {
+            // Handle streaming tokens from coding agent
+            // Update the aiProgress with streaming content
+            setAiProgress(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                message: (prev.message || '') + data.content
+              };
+            });
+          } else if (data.type === 'ai_stream_complete') {
+            // Handle stream completion
+            setAiProgress(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                message: data.full_response || prev.message
+              };
+            });
           }
         } catch (err) {
           console.error('Failed to parse WebSocket message:', err);
