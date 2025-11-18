@@ -2,13 +2,11 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useChat } from "@/hooks/use-chat";
 import { 
   ArrowRight, 
   Github, 
   Sun,
-  Moon,
-  Loader2
+  Moon
 } from "lucide-react";
 
 const EXAMPLE_PROMPTS = [
@@ -23,23 +21,18 @@ const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
-  
-  // Initialize chat hook
-  const { sendMessage, isLoading, error } = useChat();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check system preference or saved preference
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
       setIsDarkMode(savedTheme === 'dark');
     } else {
-      // Default to light mode
       setIsDarkMode(false);
     }
   }, []);
 
   useEffect(() => {
-    // Save theme preference
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
@@ -47,50 +40,14 @@ const Index = () => {
     setIsVisible(true);
   }, []);
 
-  const handleGenerate = async () => {
-    if (!prompt.trim() || isLoading) return;
-    
-    try {
-      console.log('Creating project from prompt:', prompt.trim());
-      
-      // Create project using new consolidated API
-      const projectResponse = await fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_prompt: prompt.trim(),
-          user_id: 1 // TODO: Get from Supabase auth
-        })
-      });
-      
-      if (!projectResponse.ok) {
-        throw new Error('Failed to create project');
-      }
-      
-      const projectData = await projectResponse.json();
-      console.log('Project created:', projectData);
-      
-      // Require a valid project ID before redirecting
-      if (!projectData?.project_id) {
-        throw new Error('Project ID missing in response');
-      }
-
-      // Navigate to editor with project ID and initial prompt
-      const editorUrl = `/editor?project=${projectData.project_id}&prompt=${encodeURIComponent(prompt.trim())}`;
-      if (projectData.conversation_id) {
-        navigate(`${editorUrl}&conversation=${projectData.conversation_id}`);
-      } else {
-        navigate(editorUrl);
-      }
-      
-    } catch (err) {
-      console.error('Failed to generate project:', err);
-      // Do not redirect on error; show a simple alert
-      const msg = err instanceof Error ? err.message : 'Failed to create project';
-      window.alert(msg);
-    }
+  const handleGenerate = () => {
+    if (!prompt.trim()) return;
+    setIsLoading(true);
+    // Simulate a delay then navigate to the editor page
+    setTimeout(() => {
+      navigate(`/editor`);
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -173,11 +130,6 @@ const Index = () => {
               
               <div className="flex items-center justify-between mt-4">
                 <div className={`text-sm flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {error && (
-                    <span className="text-red-500 text-xs">
-                      {error}
-                    </span>
-                  )}
                 </div>
                 
                 <Button 

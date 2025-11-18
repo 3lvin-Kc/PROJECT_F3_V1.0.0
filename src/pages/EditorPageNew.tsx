@@ -1,24 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTree } from "@/components/FileTree";
 import { MainEditorPanel } from "@/components/editor/MainEditorPanel";
 import { EditorHeader } from "@/components/EditorHeader";
 import { EditorStatusBar } from "@/components/EditorStatusBar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { AIAssistantPanel } from "@/components/editor/AIAssistantPanel";
 import { getFileLanguage } from "@/components/editor/editorUtils";
 
 const EditorPageNew = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
   // UI State
   const [selectedFile, setSelectedFile] = useState<string>('');
   const [showFileExplorer, setShowFileExplorer] = useState(true);
-  const [isCodeEditable, setIsCodeEditable] = useState(false);
-  const [editorContent, setEditorContent] = useState('');
+  const [isCodeEditable, setIsCodeEditable] = useState(true);
+  const [editorContent, setEditorContent] = useState('// Welcome to the editor!\n// Select a file to start editing.');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Preview State
@@ -26,137 +22,7 @@ const EditorPageNew = () => {
 
   // Project State
   const [files, setFiles] = useState<Map<string, any>>(new Map());
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [projectName, setProjectName] = useState<string>('New Flutter Widget');
-  const [isLoadingProject, setIsLoadingProject] = useState(false);
-
-  // Load project from URL parameters
-  useEffect(() => {
-    const projectParam = searchParams.get('project');
-    const conversationParam = searchParams.get('conversation');
-    
-    if (projectParam) {
-      setProjectId(projectParam);
-      setConversationId(conversationParam);
-      loadProject(projectParam);
-    } else {
-      // Initialize with empty files if no project
-      const emptyFiles = new Map<string, any>();
-      setFiles(emptyFiles);
-      setSelectedFile('');
-      setEditorContent('');
-    }
-  }, [searchParams]);
-
-  // Load project files from backend
-  const loadProject = async (projectId: string) => {
-    setIsLoadingProject(true);
-    try {
-      console.log('Loading project:', projectId);
-      
-      const response = await fetch(`/api/projects/${projectId}`);
-      if (!response.ok) {
-        throw new Error('Failed to load project');
-      }
-      
-      const projectData = await response.json();
-      console.log('Project data loaded:', projectData);
-      
-      // Set project name from metadata
-      if (projectData.metadata?.project_name) {
-        setProjectName(projectData.metadata.project_name);
-      }
-      
-      // Load project files
-      const filesResponse = await fetch(`/api/projects/${projectId}/files`);
-      if (filesResponse.ok) {
-        const filesData = await filesResponse.json();
-        
-        if (filesData.success && filesData.files) {
-          const projectFiles = new Map<string, any>();
-          
-          // Convert file list to Map format
-          filesData.files.forEach((file: any) => {
-            projectFiles.set(file.path, {
-              name: file.name,
-              content: '', // Will be loaded when file is selected
-              type: 'file',
-              size: file.size,
-              modified: file.modified
-            });
-          });
-          
-          setFiles(projectFiles);
-          
-          // Auto-select first Dart file if available
-          const dartFiles = filesData.files.filter((f: any) => f.name.endsWith('.dart'));
-          if (dartFiles.length > 0) {
-            setSelectedFile(dartFiles[0].path);
-          }
-        }
-      }
-      
-    } catch (error) {
-      console.error('Failed to load project:', error);
-      // Initialize with empty files on error
-      const emptyFiles = new Map<string, any>();
-      setFiles(emptyFiles);
-    } finally {
-      setIsLoadingProject(false);
-    }
-  };
-
-  // Update editor content when selected file changes
-  useEffect(() => {
-    if (selectedFile && projectId) {
-      loadFileContent(selectedFile);
-    } else if (selectedFile) {
-      const fileData = files.get(selectedFile);
-      const content = fileData?.content || '';
-      setEditorContent(content);
-      setHasUnsavedChanges(false);
-    }
-  }, [selectedFile, files, projectId]);
-
-  // Load file content from backend
-  const loadFileContent = async (filePath: string) => {
-    if (!projectId) return;
-    
-    try {
-      const response = await fetch('/api/files/read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          project_id: projectId,
-          file_path: filePath
-        })
-      });
-      
-      if (response.ok) {
-        const fileData = await response.json();
-        if (fileData.success) {
-          setEditorContent(fileData.content);
-          setHasUnsavedChanges(false);
-          
-          // Update files map with loaded content
-          const updatedFiles = new Map(files);
-          const existingFile = updatedFiles.get(filePath);
-          if (existingFile) {
-            updatedFiles.set(filePath, {
-              ...existingFile,
-              content: fileData.content
-            });
-            setFiles(updatedFiles);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load file content:', error);
-    }
-  };
+  const [projectName, setProjectName] = useState<string>('Frontend-Only Project');
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
@@ -167,45 +33,9 @@ const EditorPageNew = () => {
   };
 
   const saveCurrentFile = async (): Promise<void> => {
-    if (selectedFile && hasUnsavedChanges) {
-      try {
-        if (projectId) {
-          // Save to backend project
-          const response = await fetch('/api/files/write', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              project_id: projectId,
-              file_path: selectedFile,
-              content: editorContent
-            })
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              console.log(`Saved ${selectedFile} to project ${projectId}`);
-            }
-          }
-        }
-        
-        // Update local state
-        const updatedFiles = new Map(files);
-        const fileData = updatedFiles.get(selectedFile);
-        if (fileData) {
-          updatedFiles.set(selectedFile, {
-            ...fileData,
-            content: editorContent
-          });
-          setFiles(updatedFiles);
-          setHasUnsavedChanges(false);
-        }
-        
-      } catch (error) {
-        console.error('Failed to save file:', error);
-      }
+    if (selectedFile) {
+      console.log(`File "${selectedFile}" would be saved here.`);
+      setHasUnsavedChanges(false);
     }
   };
 
@@ -244,7 +74,6 @@ const EditorPageNew = () => {
     return root.children;
   };
 
-
   const handlePreviewLoad = useCallback((success: boolean) => {
     console.log('Preview load status:', success);
   }, []);
@@ -253,7 +82,7 @@ const EditorPageNew = () => {
     <SidebarProvider defaultOpen={true}>
       <div className="h-screen bg-background flex flex-col w-full">
         <EditorHeader
-          projectName={isLoadingProject ? "Loading project..." : projectName}
+          projectName={projectName}
           showFileExplorer={shouldShowFileExplorer()}
           onToggleFileExplorer={() => setShowFileExplorer(!showFileExplorer)}
         />
@@ -304,7 +133,10 @@ const EditorPageNew = () => {
                     <ScrollArea className="h-[calc(100%-2.5rem)] px-1 py-1">
                       <FileTree
                         files={buildStructure(files)}
-                        onFileSelect={setSelectedFile}
+                        onFileSelect={(path) => {
+                          setSelectedFile(path);
+                          setEditorContent(files.get(path)?.content || '');
+                        }}
                         selectedFile={selectedFile}
                       />
                     </ScrollArea>
