@@ -1,7 +1,6 @@
- import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowRight, 
   Github, 
@@ -9,19 +8,10 @@ import {
   Moon
 } from "lucide-react";
 
-const EXAMPLE_PROMPTS = [
-  "A login form with email/password validation and social sign-in buttons",
-  "A product card with image, title, price, and add-to-cart button",
-  "A settings toggle with smooth animation and theme integration",
-  "A dashboard chart component with customizable data visualization"
-];
-
 const Index = () => {
-  const [prompt, setPrompt] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -40,14 +30,8 @@ const Index = () => {
     setIsVisible(true);
   }, []);
 
-  const handleGenerate = () => {
-    if (!prompt.trim()) return;
-    setIsLoading(true);
-    // Simulate a delay then navigate to the editor page
-    setTimeout(() => {
-      navigate(`/editor`);
-      setIsLoading(false);
-    }, 1000);
+  const handleStartBuilding = () => {
+    navigate('/editor');
   };
 
   return (
@@ -98,82 +82,42 @@ const Index = () => {
           {/* Main Headline */}
           <h1 className="text-5xl md:text-3xl lg:text-5xl font-bold tracking-tighter mb-6 leading-none">
             <span className={isDarkMode ? "text-white" : "text-black"}>Fuck Flutter Flow </span>
-            
           </h1>
           
           {/* Subtitle */}
           <p className={`text-xl md:text-2xl mb-12 max-w-2xl mx-auto leading-relaxed font-light ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Transform your ideas into production-ready Flutter widgets in seconds.
-            <br />
-            
           </p>
 
-          {/* Main Input */}
-          <div className="max-w-2xl mx-auto mb-16">
-            <div className="relative group">
-              <Textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe the Flutter widget you want..."
-                className={`min-h-[140px] text-lg resize-none rounded-xl px-6 py-5 focus-visible:ring-1 placeholder:text-sm leading-relaxed transition-all ${
-                  isDarkMode 
-                    ? 'border border-white/20 bg-white/5 backdrop-blur-sm focus-visible:ring-white/30 focus-visible:border-white/40 text-white placeholder:text-gray-500' 
-                    : 'border border-gray-300 bg-white backdrop-blur-sm focus-visible:ring-gray-400 focus-visible:border-gray-500 text-black placeholder:text-gray-400 shadow-sm'
-                }`}
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                    handleGenerate();
-                  }
-                }}
-              />
-              
-              <div className="flex items-center justify-between mt-4">
-                <div className={`text-sm flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                </div>
-                
-                <Button 
-                  onClick={handleGenerate}
-                  disabled={!prompt.trim() || isLoading}
-                  className={`${isDarkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'} px-6 py-2.5 rounded-lg font-medium transition-all`}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      Generate
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
+          {/* Features Section */}
+          <div className="max-w-3xl mx-auto mb-16">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                <div className={`text-2xl mb-3 ${isDarkMode ? 'text-white' : 'text-black'}`}>⚡</div>
+                <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>Lightning Fast</h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Generate production-ready code in seconds</p>
+              </div>
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                <div className={`text-2xl mb-3 ${isDarkMode ? 'text-white' : 'text-black'}`}>🎨</div>
+                <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>Beautiful UI</h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Modern, responsive widgets ready to use</p>
+              </div>
+              <div className={`p-6 rounded-lg ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                <div className={`text-2xl mb-3 ${isDarkMode ? 'text-white' : 'text-black'}`}>🤖</div>
+                <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>AI-Powered</h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Intelligent code generation with context</p>
               </div>
             </div>
           </div>
 
-          {/* Example Prompts */}
-          {!isLoading && (
-            <div className="mb-24">
-              <p className={`text-sm mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Try these examples:</p>
-              <div className="grid sm:grid-cols-2 gap-3 max-w-3xl mx-auto">
-                {EXAMPLE_PROMPTS.map((example, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setPrompt(example)}
-                    className={`text-left p-5 rounded-lg transition-all text-sm leading-relaxed group ${
-                      isDarkMode 
-                        ? 'border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:border-white/20' 
-                        : 'border border-gray-200 bg-white backdrop-blur-sm hover:bg-gray-50 hover:border-gray-300 shadow-sm'
-                    }`}
-                  >
-                    <span className={isDarkMode ? 'text-gray-300 group-hover:text-white' : 'text-gray-700 group-hover:text-black'}>{example}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* CTA Button */}
+          <Button 
+            onClick={handleStartBuilding}
+            className={`${isDarkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'} px-8 py-3 rounded-lg font-medium transition-all text-lg`}
+          >
+            Start Building
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
         </div>
 
       </section>

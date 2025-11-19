@@ -1,4 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useAgent } from "@/hooks/use-agent";
+import { useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTree } from "@/components/FileTree";
 import { MainEditorPanel } from "@/components/editor/MainEditorPanel";
@@ -15,13 +17,43 @@ const EditorPageNew = () => {
   const [showFileExplorer, setShowFileExplorer] = useState(true);
   const [isCodeEditable, setIsCodeEditable] = useState(true);
   const [editorContent, setEditorContent] = useState('// Welcome to the editor!\n// Select a file to start editing.');
+
+  // Agent State
+  const { state: agentState, sendMessage } = useAgent();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const location = useLocation();
 
   // Preview State
   const [previewCode, setPreviewCode] = useState<string>('');
 
   // Project State
   const [files, setFiles] = useState<Map<string, any>>(new Map());
+
+  // Initialize agent with prompt from navigation state if available
+  useEffect(() => {
+    const state = location.state as { prompt?: string } | null;
+    if (state?.prompt && !agentState.isStreaming && agentState.files.size === 0) {
+      // Prompt was already sent from Index.tsx, agent should be streaming
+      // This effect just ensures we're ready to display results
+    }
+  }, [location.state, agentState.isStreaming, agentState.files.size]);
+
+  useEffect(() => {
+    // Combine initial files with agent-generated files
+    // Create a new Map to ensure React detects the change
+    const combinedFiles = new Map(files);
+    agentState.files.forEach((content, path) => {
+      combinedFiles.set(path, { content });
+    });
+    setFiles(combinedFiles);
+  }, [agentState.files]);
+
+  useEffect(() => {
+    if (agentState.activeFile) {
+      setSelectedFile(agentState.activeFile);
+      setEditorContent(agentState.files.get(agentState.activeFile) || '');
+    }
+  }, [agentState.activeFile, agentState.files]);
   const [projectName, setProjectName] = useState<string>('Frontend-Only Project');
 
   const handleEditorChange = (value: string | undefined) => {
@@ -78,6 +110,12 @@ const EditorPageNew = () => {
     console.log('Preview load status:', success);
   }, []);
 
+  const handleFollowUpMessage = useCallback((message: string) => {
+    // Send follow-up message to agent
+    sendMessage(message);
+    // Already on editor page, no redirect needed
+  }, [sendMessage]);
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="h-screen bg-background flex flex-col w-full">
@@ -91,7 +129,11 @@ const EditorPageNew = () => {
           <ResizablePanelGroup direction="horizontal" className="h-full">
             {/* AI Assistant Panel - Resizable */}
             <ResizablePanel defaultSize={25} minSize={15} maxSize={40} className="border-r">
-              <AIAssistantPanel showAIAssistant={true} />
+              <AIAssistantPanel 
+                showAIAssistant={true} 
+                agentState={agentState}
+                onSendMessage={handleFollowUpMessage}
+              />
             </ResizablePanel>
             
             <ResizableHandle withHandle />
@@ -108,8 +150,8 @@ const EditorPageNew = () => {
                     isCodeEditable={isCodeEditable}
                     editorContent={editorContent}
                     hasUnsavedChanges={hasUnsavedChanges}
-                    isStreaming={false}
-                    streamingContent={''}
+                    isStreaming={agentState.isStreaming}
+                    streamingContent={agentState.activeFile ? agentState.files.get(agentState.activeFile) || '' : ''}
                     previewCode={previewCode}
                     onPreviewLoad={handlePreviewLoad}
                     getFileLanguage={getFileLanguage}

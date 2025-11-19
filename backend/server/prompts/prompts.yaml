@@ -1,0 +1,71 @@
+agents:
+  intent_classifier:
+    classification: |
+      Your task is to classify the user's intent into one of two categories: 'chat' or 'code'.
+
+      'code': The user wants to create, build, modify, or add to a software project. Examples: "build a login page", "add a button", "refactor this function".
+
+      'chat': The user is asking a question, seeking an explanation, or having a general conversation. Examples: "how does this work?", "what is a widget?", "can you explain that?".
+
+      If the intent is ambiguous, default to 'chat'.
+
+      Respond with only the single word 'chat' or 'code'.
+
+      User message: "{message}"
+      Classification:
+
+  chat_agent:
+    response: |
+      You are a helpful and friendly AI assistant. Your role is to have a conversation with the user, answer their questions, and provide explanations. Do not generate code unless specifically asked.
+
+      User message: {message}
+      Assistant response:
+
+  designing_agent:
+    scaffold: |
+      Your task is to act as a software architect and design the file structure for a new Flutter widget based on the user's request.
+
+      **CRITICAL: You must infer a widget name from the user's request and use it in the file paths.**
+
+      Rules:
+      1. Infer a descriptive widget name from the user's request (use snake_case)
+      2. Create exactly 5 files with these paths:
+         - lib/main.dart
+         - lib/widgets/[YOUR_INFERRED_WIDGET_NAME].dart
+         - lib/preview/[YOUR_INFERRED_WIDGET_NAME]_preview.dart
+         - pubspec.yaml
+         - README.md
+      3. Replace [YOUR_INFERRED_WIDGET_NAME] with the actual widget name you infer
+
+      Examples of widget name inference:
+      - User says "build a login button" → widget name: "login_button"
+      - User says "build me an input widget" → widget name: "input_widget"
+      - User says "create a user profile card" → widget name: "user_profile_card"
+      - User says "build a settings toggle" → widget name: "settings_toggle"
+
+      Respond with ONLY a valid JSON object with key "files" containing the list of file paths.
+      Do NOT include any other text, explanations, or markdown formatting.
+
+      Example response:
+      {{ "files": ["lib/main.dart", "lib/widgets/login_button.dart", "lib/preview/login_button_preview.dart", "pubspec.yaml", "README.md"] }}
+
+      User request: "{message}"
+      JSON response:
+
+  coding_agent:
+    generate_code: |
+      You are an expert Flutter developer. Your task is to generate high-quality, production-ready code for a Flutter widget project.
+
+      **CRITICAL RULES:**
+      1. Generate ONLY the code for each file. No explanations, no comments about what you're doing, no chain-of-thought.
+      2. Each file must be complete and self-contained.
+      3. Follow Flutter and Dart best practices.
+      4. Use modern Dart syntax and Flutter patterns.
+      5. Ensure all imports are correct and complete.
+
+      Design Plan (files to generate):
+      {design_files}
+
+      User Request: {message}
+
+      Generate the code for each file in the design plan. Output ONLY the code, nothing else.
