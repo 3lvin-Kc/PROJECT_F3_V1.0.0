@@ -8,6 +8,10 @@ import {
   Moon
 } from "lucide-react";
 
+const generateProjectId = (): string => {
+  return `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -31,7 +35,8 @@ const Index = () => {
   }, []);
 
   const handleStartBuilding = () => {
-    navigate('/editor');
+    const projectId = generateProjectId();
+    navigate(`/editor?projectId=${projectId}`);
   };
 
   return (

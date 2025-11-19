@@ -15,10 +15,27 @@ const initialState: AgentState = {
   activeFile: null,
 };
 
-export const useAgent = () => {
-  const [state, setState] = useState<AgentState>(initialState);
+export const useAgent = (projectId?: string) => {
+  const [state, setState] = useState<AgentState>(() => {
+    // Initialize state with chat history from sessionStorage if available
+    if (projectId) {
+      const storedHistory = sessionStorage.getItem(`chatHistory_${projectId}`);
+      if (storedHistory) {
+        try {
+          const conversationHistory = JSON.parse(storedHistory);
+          return {
+            ...initialState,
+            conversationHistory,
+          };
+        } catch (e) {
+          console.error('Failed to parse stored chat history:', e);
+        }
+      }
+    }
+    return initialState;
+  });
 
-  const sendMessage = async (message: string) => {
+  const sendMessage = async (message: string, projectId: string = '') => {
     // Add user prompt to conversation history (don't reset state)
     const messageId = `msg-${Date.now()}`;
     setState(prev => ({
@@ -43,7 +60,7 @@ export const useAgent = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, project_id: projectId }),
       });
 
       if (!response.body) return;

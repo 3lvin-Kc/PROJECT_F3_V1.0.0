@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from .config import Config
 from .orchestrator import run_agent_pipeline
 from .rate_limiter import get_rate_limiter
+from .database import db
 
 # Initialize configuration and validation
 Config.validate()
@@ -41,6 +42,7 @@ app.add_middleware(
 
 class AgentRequest(BaseModel):
     message: str
+    project_id: str
 
 
 async def format_event(data: dict):
@@ -91,11 +93,52 @@ async def agent_stream_endpoint(request: AgentRequest, http_request: Request):
             },
         )
     
-    logger.info(f"Received request from {client_ip}: {request.message[:50]}...")
+    # Ensure project exists in database
+    db.create_project(request.project_id)
+    
+    logger.info(f"Received request from {client_ip}: {request.message[:50]}... (project: {request.project_id})")
     return StreamingResponse(
         agent_event_stream(request),
         media_type="text/event-stream"
     )
+
+
+@app.get("/api/projects/{project_id}")
+async def get_project_endpoint(project_id: str):
+    """Get project details including chat history."""
+    project = db.get_project(project_id)
+    
+    if not project:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Project not found"}
+        )
+    
+    chat_history = db.get_chat_history(project_id)
+    files = db.get_files_by_project(project_id)
+    
+    return {
+        "project": dict(project),
+        "chat_history": chat_history,
+        "files": files,
+        "file_count": len(files),
+        "chat_count": len(chat_history)
+    }
+
+
+@app.get("/api/projects/{project_id}/chat-history")
+async def get_chat_history_endpoint(project_id: str):
+    """Get chat history for a project."""
+    project = db.get_project(project_id)
+    
+    if not project:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Project not found"}
+        )
+    
+    chat_history = db.get_chat_history(project_id)
+    return {"project_id": project_id, "chat_history": chat_history}
 
 
 @app.on_event("startup")

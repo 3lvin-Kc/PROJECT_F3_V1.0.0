@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAgent } from "@/hooks/use-agent";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTree } from "@/components/FileTree";
 import { MainEditorPanel } from "@/components/editor/MainEditorPanel";
@@ -19,15 +19,76 @@ const EditorPageNew = () => {
   const [editorContent, setEditorContent] = useState('// Welcome to the editor!\n// Select a file to start editing.');
 
   // Agent State
-  const { state: agentState, sendMessage } = useAgent();
+  const [projectId, setProjectId] = useState<string>('');
+  const { state: agentState, sendMessage } = useAgent(projectId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   // Preview State
   const [previewCode, setPreviewCode] = useState<string>('');
 
   // Project State
   const [files, setFiles] = useState<Map<string, any>>(new Map());
+
+  // Initialize project ID from URL query params
+  useEffect(() => {
+    const urlProjectId = searchParams.get('projectId');
+    if (urlProjectId) {
+      setProjectId(urlProjectId);
+    }
+  }, [searchParams]);
+
+  // Load chat history from database when project ID is set
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!projectId) return;
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/projects/${projectId}/chat-history`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const chatHistory = data.chat_history || [];
+
+        // Convert database records to conversation history format
+        if (chatHistory.length > 0) {
+          const conversationHistory = chatHistory.flatMap((msg: any) => {
+            const items = [];
+            
+            // Add user prompt
+            items.push({
+              id: `msg-${msg.id}`,
+              type: 'user_prompt' as const,
+              content: msg.user_prompt,
+              timestamp: new Date(msg.timestamp).getTime(),
+            });
+
+            // Add AI response
+            if (msg.ai_response) {
+              items.push({
+                id: `response-${msg.id}`,
+                type: msg.intent === 'chat' ? 'chat_response' : 'narrative',
+                content: msg.ai_response,
+                timestamp: new Date(msg.timestamp).getTime(),
+              });
+            }
+
+            return items;
+          });
+
+          // Update agent state with loaded history
+          // Note: We'll need to use sendMessage or update state directly
+          // For now, we'll store this in a way that the agent can access it
+          sessionStorage.setItem(`chatHistory_${projectId}`, JSON.stringify(conversationHistory));
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+
+    loadChatHistory();
+  }, [projectId]);
 
   // Initialize agent with prompt from navigation state if available
   useEffect(() => {
@@ -83,6 +144,8 @@ const EditorPageNew = () => {
     const root: any = { type: 'folder', name: '', children: [] };
     
     for (const fullPath of filesMap.keys()) {
+      // Skip null or empty paths
+      if (!fullPath) continue;
       const parts = fullPath.split('/');
       let node = root;
       
@@ -111,10 +174,10 @@ const EditorPageNew = () => {
   }, []);
 
   const handleFollowUpMessage = useCallback((message: string) => {
-    // Send follow-up message to agent
-    sendMessage(message);
+    // Send follow-up message to agent with project ID
+    sendMessage(message, projectId);
     // Already on editor page, no redirect needed
-  }, [sendMessage]);
+  }, [sendMessage, projectId]);
 
   return (
     <SidebarProvider defaultOpen={true}>

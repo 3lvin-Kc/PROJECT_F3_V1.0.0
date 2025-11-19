@@ -13,7 +13,9 @@ model = genai.GenerativeModel(Config.MODEL_NAME)
 async def run_designing_agent(message: str):
     """Generates the high-level plan for the coding agent."""
     yield {"event": "design.started"}
-    yield {"event": "design.phase", "details": "Analyzing request..."}
+    
+    # Emit friendly narration for design phase start
+    yield {"event": "file.narrative", "path": "design_phase", "narrative": "I'm taking a moment to understand what you're looking for and how best to approach this design. Let me analyze your request and think through the best structure for your component."}
 
     try:
         prompt_template = PromptLoader.get('designing_agent', 'scaffold')

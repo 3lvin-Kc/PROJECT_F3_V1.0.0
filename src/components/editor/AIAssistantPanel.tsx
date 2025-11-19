@@ -57,9 +57,7 @@ export const AIAssistantPanel = ({ showAIAssistant, agentState, onSendMessage }:
             } else if (msg.type === 'narrative') {
               return (
                 <div key={msg.id} className="flex justify-start">
-                  <div className="max-w-xs px-3 py-2 bg-muted/60 dark:bg-muted/40 rounded-lg text-xs text-muted-foreground border border-border/50">
-                    <p>{msg.content}</p>
-                  </div>
+                  <p className="text-sm text-foreground/80 leading-relaxed">{msg.content}</p>
                 </div>
               );
             } else if (msg.type === 'chat_response') {
