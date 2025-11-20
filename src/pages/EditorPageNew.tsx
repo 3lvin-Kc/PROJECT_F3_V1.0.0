@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useAgent } from "@/hooks/use-agent";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTree } from "@/components/FileTree";
 import { MainEditorPanel } from "@/components/editor/MainEditorPanel";
@@ -11,6 +11,11 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { AIAssistantPanel } from "@/components/editor/AIAssistantPanel";
 import { getFileLanguage } from "@/components/editor/editorUtils";
 
+// Add the generateProjectId function here
+const generateProjectId = (): string => {
+  return `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 const EditorPageNew = () => {
   // UI State
   const [selectedFile, setSelectedFile] = useState<string>('');
@@ -20,10 +25,11 @@ const EditorPageNew = () => {
 
   // Agent State
   const [projectId, setProjectId] = useState<string>('');
-  const { state: agentState, sendMessage } = useAgent(projectId);
+  const { state: agentState, sendMessage, initializeState } = useAgent(projectId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams(); // Updated to include setSearchParams
+  const navigate = useNavigate();
 
   // Preview State
   const [previewCode, setPreviewCode] = useState<string>('');
@@ -39,55 +45,76 @@ const EditorPageNew = () => {
     }
   }, [searchParams]);
 
-  // Load chat history from database when project ID is set
+  // Load chat history and files from database when project ID is set
   useEffect(() => {
-    const loadChatHistory = async () => {
+    const loadProjectData = async () => {
       if (!projectId) return;
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/projects/${projectId}/chat-history`);
-        if (!response.ok) return;
+        let conversationHistory: any[] = [];
+        
+        // Load chat history
+        const chatResponse = await fetch(`http://127.0.0.1:8000/api/projects/${projectId}/chat-history`);
+        if (chatResponse.ok) {
+          const data = await chatResponse.json();
+          const chatHistory = data.chat_history || [];
 
-        const data = await response.json();
-        const chatHistory = data.chat_history || [];
-
-        // Convert database records to conversation history format
-        if (chatHistory.length > 0) {
-          const conversationHistory = chatHistory.flatMap((msg: any) => {
-            const items = [];
-            
-            // Add user prompt
-            items.push({
-              id: `msg-${msg.id}`,
-              type: 'user_prompt' as const,
-              content: msg.user_prompt,
-              timestamp: new Date(msg.timestamp).getTime(),
-            });
-
-            // Add AI response
-            if (msg.ai_response) {
+          // Convert database records to conversation history format
+          if (chatHistory.length > 0) {
+            conversationHistory = chatHistory.flatMap((msg: any) => {
+              const items = [];
+              
+              // Add user prompt
               items.push({
-                id: `response-${msg.id}`,
-                type: msg.intent === 'chat' ? 'chat_response' : 'narrative',
-                content: msg.ai_response,
+                id: `msg-${msg.id}`,
+                type: 'user_prompt' as const,
+                content: msg.user_prompt,
                 timestamp: new Date(msg.timestamp).getTime(),
               });
-            }
 
-            return items;
-          });
+              // Add AI response
+              if (msg.ai_response) {
+                items.push({
+                  id: `response-${msg.id}`,
+                  type: msg.intent === 'chat' ? 'chat_response' : 'narrative',
+                  content: msg.ai_response,
+                  timestamp: new Date(msg.timestamp).getTime(),
+                });
+              }
 
-          // Update agent state with loaded history
-          // Note: We'll need to use sendMessage or update state directly
-          // For now, we'll store this in a way that the agent can access it
-          sessionStorage.setItem(`chatHistory_${projectId}`, JSON.stringify(conversationHistory));
+              return items;
+            });
+          }
+        }
+
+        // Load files with content
+        const filesResponse = await fetch(`http://127.0.0.1:8000/api/projects/${projectId}/files-with-content`);
+        if (filesResponse.ok) {
+          const filesData = await filesResponse.json();
+          const filesMap = new Map<string, any>();
+          
+          for (const file of filesData.files) {
+            filesMap.set(file.path, { content: file.content });
+          }
+          
+          if (filesMap.size > 0) {
+            setFiles(filesMap);
+            // Initialize agent state with loaded data
+            initializeState(conversationHistory, filesMap);
+          } else if (conversationHistory.length > 0) {
+            // Initialize agent state with conversation history only
+            initializeState(conversationHistory, new Map());
+          }
+        } else if (conversationHistory.length > 0) {
+          // Initialize agent state with conversation history only
+          initializeState(conversationHistory, new Map());
         }
       } catch (error) {
-        console.error('Failed to load chat history:', error);
+        console.error('Failed to load project data:', error);
       }
     };
 
-    loadChatHistory();
+    loadProjectData();
   }, [projectId]);
 
   // Initialize agent with prompt from navigation state if available
@@ -100,13 +127,23 @@ const EditorPageNew = () => {
   }, [location.state, agentState.isStreaming, agentState.files.size]);
 
   useEffect(() => {
-    // Combine initial files with agent-generated files
-    // Create a new Map to ensure React detects the change
-    const combinedFiles = new Map(files);
-    agentState.files.forEach((content, path) => {
-      combinedFiles.set(path, { content });
-    });
-    setFiles(combinedFiles);
+    // Only combine files if we have agent-generated files and they're not already in the files state
+    // This prevents overriding the loaded files from database
+    if (agentState.files.size > 0) {
+      let shouldUpdate = false;
+      const combinedFiles = new Map(files);
+      
+      agentState.files.forEach((content, path) => {
+        if (!combinedFiles.has(path)) {
+          combinedFiles.set(path, { content });
+          shouldUpdate = true;
+        }
+      });
+      
+      if (shouldUpdate) {
+        setFiles(combinedFiles);
+      }
+    }
   }, [agentState.files]);
 
   useEffect(() => {
@@ -132,15 +169,15 @@ const EditorPageNew = () => {
     }
   };
 
-  const shouldShowFileExplorer = () => {
+  const shouldShowFileExplorer = useCallback(() => {
     return showFileExplorer && files.size > 0;
-  };
+  }, [showFileExplorer, files.size]);
 
   // Convert files Map to object structure
-  const projectFiles = Object.fromEntries(files);
+  const projectFiles = useMemo(() => Object.fromEntries(files), [files]);
 
   // Build tree structure for file explorer
-  const buildStructure = (filesMap: Map<string, any>) => {
+  const buildStructure = useCallback((filesMap: Map<string, any>) => {
     const root: any = { type: 'folder', name: '', children: [] };
     
     for (const fullPath of filesMap.keys()) {
@@ -167,7 +204,7 @@ const EditorPageNew = () => {
     }
     
     return root.children;
-  };
+  }, []);
 
   const handlePreviewLoad = useCallback((success: boolean) => {
     console.log('Preview load status:', success);
@@ -179,6 +216,20 @@ const EditorPageNew = () => {
     // Already on editor page, no redirect needed
   }, [sendMessage, projectId]);
 
+  // New function to handle creating a new project
+  const handleNewProject = useCallback(() => {
+    const newProjectId = generateProjectId();
+    // Update the URL with the new project ID to refresh the page with new data
+    setSearchParams({ projectId: newProjectId });
+    
+    // Reset the editor state for a fresh start
+    setFiles(new Map());
+    setSelectedFile('');
+    setEditorContent('// Welcome to the editor!\n// Select a file to start editing.');
+    setHasUnsavedChanges(false);
+    initializeState([], new Map());
+  }, [setSearchParams, initializeState]);
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="h-screen bg-background flex flex-col w-full">
@@ -186,6 +237,7 @@ const EditorPageNew = () => {
           projectName={projectName}
           showFileExplorer={shouldShowFileExplorer()}
           onToggleFileExplorer={() => setShowFileExplorer(!showFileExplorer)}
+          onNewProject={handleNewProject}
         />
 
         <div className="flex-1 overflow-hidden">

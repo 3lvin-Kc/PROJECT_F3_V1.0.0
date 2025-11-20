@@ -14,7 +14,8 @@ import {
   Settings,
   PanelLeftClose,
   PanelRightClose,
-  ExternalLink
+  ExternalLink,
+  Plus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -34,13 +35,15 @@ interface EditorHeaderProps {
   showFileExplorer: boolean;
   onToggleFileExplorer: () => void;
   currentProject?: any;
+  onNewProject?: () => void; // Add new prop for new project callback
 }
 
 export const EditorHeader = ({ 
   projectName, 
   showFileExplorer, 
   onToggleFileExplorer, 
-  currentProject
+  currentProject,
+  onNewProject // Destructure the new prop
 }: EditorHeaderProps) => {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
@@ -69,16 +72,10 @@ export const EditorHeader = ({
         {/* Panel Controls */}
         
 
-
         <div className="w-px h-6 bg-border mx-2" />
 
         {/* Action Buttons */}
         
-
-        
-
-       
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-accent transition-all duration-200">
@@ -86,6 +83,11 @@ export const EditorHeader = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={onNewProject}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Settings className="w-4 h-4 mr-2" />
               Project Settings
@@ -95,7 +97,6 @@ export const EditorHeader = ({
               Documentation
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

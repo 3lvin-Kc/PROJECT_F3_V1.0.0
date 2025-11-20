@@ -1,3 +1,4 @@
+import asyncio
 from .agents import intent_classifier, chat_agent, designing_agent, coding_agent
 from .database import db
 
@@ -18,6 +19,7 @@ async def run_agent_pipeline(request):
 
     # 2. Route based on intent
     ai_response = ""
+    file_contents = {}  # Collect generated files
     
     if intent == "chat":
         async for event in chat_agent.run_chat_agent(user_message):
@@ -37,7 +39,31 @@ async def run_agent_pipeline(request):
         
         if design_plan:
             async for event in coding_agent.run_coding_agent(design_plan, user_message):
+                # Capture file content from code generation events
+                if event.get("event") == "code.chunk":
+                    file_path = event.get("file")
+                    content = event.get("content", "")
+                    if file_path:
+                        file_contents[file_path] = file_contents.get(file_path, "") + content
+                        print(f"DEBUG: Captured code chunk for {file_path}, total size now: {len(file_contents[file_path])} bytes")
                 yield event
+        
+        # Debug: Print file contents before persisting
+        print(f"DEBUG: File contents before persisting:")
+        for file_path, content in file_contents.items():
+            print(f"  {file_path}: {len(content)} bytes")
+        
+        # Persist generated files to database
+        print(f"DEBUG: Persisting {len(file_contents)} files for project {project_id}")
+        for file_path, file_content in file_contents.items():
+            print(f"DEBUG: Saving file {file_path} with {len(file_content)} bytes")
+            file_record = db.create_file(project_id, file_path, file_path.split('/')[-1])
+            if file_record:
+                db.save_code(file_record['id'], file_content)
+                print(f"DEBUG: Successfully persisted {file_path}")
+                yield {"event": "file.persisted", "path": file_path}
+            else:
+                print(f"DEBUG: Failed to create file record for {file_path}")
         
         # Store code request in database
         db.add_chat_message(project_id, user_message, str(design_plan), intent)

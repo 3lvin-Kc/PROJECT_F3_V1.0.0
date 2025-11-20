@@ -60,9 +60,10 @@ async def run_coding_agent(design_plan: dict, message: str):
             if chunk.text:
                 text = chunk.text
 
-                # Simple heuristic: detect file boundaries by looking for file paths
+                # Improved heuristic: detect file boundaries by looking for markdown code blocks with file paths
                 for file_path in files:
-                    if file_path in text and file_index < len(files):
+                    # Look for markdown code block with file path as language identifier
+                    if f"```{file_path}" in text and file_index < len(files):
                         # If we were working on a previous file, generate its narration now
                         if current_file and current_file not in narrated_files:
                             try:
@@ -91,6 +92,8 @@ Friendly explanation:"""
                         file_index += 1
                         file_contents[current_file] = ''
                         yield {"event": "code.file_started", "file": current_file}
+                        # Remove the markdown code block marker from the text
+                        text = text.replace(f"```{file_path}", "").replace("```\n\n", "").replace("```\n", "")
                         break
 
                 # Stream the code chunk and accumulate for narration
@@ -119,9 +122,16 @@ Friendly explanation:"""
             except Exception as e:
                 print(f"Error generating narration for {current_file}: {e}")
 
+        # Debug: Print file contents summary
+        print(f"DEBUG: File contents summary:")
+        for file_path, content in file_contents.items():
+            print(f"  {file_path}: {len(content)} characters")
+        
         # Emit completion event
         yield {"event": "code.completed", "files_generated": len(files)}
 
     except Exception as e:
         print(f"Error during code generation: {e}")
+        import traceback
+        traceback.print_exc()
         yield {"event": "code.completed", "error": f"Failed to generate code: {str(e)}"}

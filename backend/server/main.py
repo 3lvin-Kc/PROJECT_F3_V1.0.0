@@ -141,6 +141,36 @@ async def get_chat_history_endpoint(project_id: str):
     return {"project_id": project_id, "chat_history": chat_history}
 
 
+@app.get("/api/projects/{project_id}/files-with-content")
+async def get_files_with_content(project_id: str):
+    """Get all files with their content for a project."""
+    project = db.get_project(project_id)
+    
+    if not project:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Project not found"}
+        )
+    
+    files = db.get_files_by_project(project_id)
+    
+    files_with_content = []
+    for file_record in files:
+        code_record = db.get_code_by_file(file_record['id'])
+        files_with_content.append({
+            'path': file_record['file_path'],
+            'name': file_record['file_name'],
+            'content': code_record['code_content'] if code_record else '',
+            'created_at': file_record['created_at']
+        })
+    
+    return {
+        "project_id": project_id,
+        "files": files_with_content,
+        "file_count": len(files_with_content)
+    }
+
+
 @app.on_event("startup")
 async def startup_event():
     """Startup event handler."""

@@ -62,6 +62,11 @@ agents:
       3. Follow Flutter and Dart best practices.
       4. Use modern Dart syntax and Flutter patterns.
       5. Ensure all imports are correct and complete.
+      6. **VERY IMPORTANT**: For each file, start with a markdown code block with the file path as the language identifier, like:
+         ```lib/main.dart
+         // Content of main.dart
+         ```
+         This is CRITICAL for the parsing system to correctly identify file boundaries.
 
       Design Plan (files to generate):
       {design_files}

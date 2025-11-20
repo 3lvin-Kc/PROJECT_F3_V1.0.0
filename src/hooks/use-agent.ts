@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AgentState, AgentStreamEvent } from '../lib/types';
 
 const API_URL = 'http://127.0.0.1:8000/api/agent/stream';
@@ -17,23 +17,40 @@ const initialState: AgentState = {
 
 export const useAgent = (projectId?: string) => {
   const [state, setState] = useState<AgentState>(() => {
-    // Initialize state with chat history from sessionStorage if available
-    if (projectId) {
-      const storedHistory = sessionStorage.getItem(`chatHistory_${projectId}`);
-      if (storedHistory) {
-        try {
-          const conversationHistory = JSON.parse(storedHistory);
-          return {
-            ...initialState,
-            conversationHistory,
-          };
-        } catch (e) {
-          console.error('Failed to parse stored chat history:', e);
-        }
-      }
-    }
     return initialState;
   });
+
+  // Function to initialize state from external data
+  const initializeState = useCallback((conversationHistory: any[], filesMap: Map<string, any>) => {
+    setState(prev => ({
+      ...prev,
+      conversationHistory,
+      files: filesMap,
+    }));
+  }, []);
+
+  // Effect to persist files to sessionStorage when they change
+  useEffect(() => {
+    if (projectId && state.files.size > 0) {
+      try {
+        const filesArray = Array.from(state.files.entries());
+        sessionStorage.setItem(`files_${projectId}`, JSON.stringify(filesArray));
+      } catch (error) {
+        console.error('Failed to save files to sessionStorage:', error);
+      }
+    }
+  }, [state.files, projectId]);
+
+  // Effect to persist conversation history to sessionStorage when it changes
+  useEffect(() => {
+    if (projectId && state.conversationHistory.length > 0) {
+      try {
+        sessionStorage.setItem(`chatHistory_${projectId}`, JSON.stringify(state.conversationHistory));
+      } catch (error) {
+        console.error('Failed to save chat history to sessionStorage:', error);
+      }
+    }
+  }, [state.conversationHistory, projectId]);
 
   const sendMessage = async (message: string, projectId: string = '') => {
     // Add user prompt to conversation history (don't reset state)
@@ -205,5 +222,5 @@ export const useAgent = (projectId?: string) => {
     }
   };
 
-  return { state, sendMessage };
+  return { state, sendMessage, initializeState };
 };
